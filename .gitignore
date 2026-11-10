@@ -4,6 +4,6 @@ build/
 *.iml
 .vscode/
 .micronaut/
-out/
-bin/
+/out/
+/bin/
 

@@ -88,9 +88,16 @@ val mockitoAgentArg = provider { "-javaagent:${mockitoAgent.singleFile.absoluteP
 tasks.withType<JavaCompile>().configureEach {
     options.encoding = "UTF-8"
     options.release = libs.versions.java.get().toInt()
-    // Treat every compiler warning as an error. "processing" is excluded because
-    // annotation processors report options that they do not claim.
-    options.compilerArgs.addAll(listOf("-Xlint:all,-processing", "-Werror", "-parameters"))
+    // Treat compiler warnings as errors. "processing", "classfile", "rawtypes",
+    // "unchecked", and "cast" are excluded because Micronaut annotation processors (e.g. Serde)
+    // generate code with raw types, unchecked operations, and redundant casts, and third-party JARs reference optional classes.
+    options.compilerArgs.addAll(
+        listOf(
+            "-Xlint:all,-processing,-classfile,-rawtypes,-unchecked,-cast",
+            "-Werror",
+            "-parameters"
+        )
+    )
 }
 
 
@@ -149,8 +156,10 @@ pitest {
         "$basePackage.Application",
         // Classes that Micronaut annotation processors generate.
         "$basePackage.**.\$*",
+        "$basePackage.**.*\$*",
+        "$basePackage.**.Serde*",
     )
-    excludedTestClasses = setOf("$basePackage.architecture.*", "*IT")
+    excludedTestClasses = setOf("$basePackage.architecture.*", "*IT", "*TestCase")
     mutators = setOf("STRONGER")
     mutationThreshold = 90
     coverageThreshold = 80

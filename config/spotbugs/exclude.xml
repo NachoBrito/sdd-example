@@ -8,9 +8,21 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="https://github.com/spotbugs/filter/3.0.0 https://raw.githubusercontent.com/spotbugs/spotbugs/master/spotbugs/etc/findbugsfilter.xsd">
 
-  <!-- Classes that Micronaut annotation processors generate ($Definition, $Introspection, ...). -->
+  <!-- Classes that Micronaut annotation processors generate ($Definition, $Introspection, Serde, Intercepted). -->
   <Match>
     <Class name="~.*\.\$.*"/>
+  </Match>
+  <Match>
+    <Class name="~.*\$Intercepted.*"/>
+  </Match>
+  <Match>
+    <Class name="~.*Serde.*"/>
+  </Match>
+
+  <!-- Injected dependencies in service and persistence adapter constructors. -->
+  <Match>
+    <Bug pattern="EI_EXPOSE_REP2"/>
+    <Class name="~.*(ProductService|ProductPersistenceAdapter)"/>
   </Match>
 
 </FindBugsFilter>

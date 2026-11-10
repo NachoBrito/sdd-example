@@ -1,0 +1,331 @@
+openapi: 3.0.3
+info:
+  title: Product Management API
+  description: REST API for managing products with client-side ID generation and integer cent pricing.
+  version: 1.0.0
+paths:
+  /v1/products:
+    post:
+      summary: Create a product
+      operationId: createProduct
+      description: Creates a new product with a client-generated UUID identifier.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProductRequest'
+      responses:
+        '201':
+          description: Product successfully created
+          headers:
+            Location:
+              schema:
+                type: string
+                example: /v1/products/3fa85f64-5717-4562-b3fc-2c963f66afa6
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+        '400':
+          description: Validation error in request payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Product identifier or SKU already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      summary: List and filter products
+      operationId: listProducts
+      description: Retrieves products with optional filtering by SKU, name regex, and status, and sorting by name, status, or creation timestamp.
+      parameters:
+        - name: sku
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by exact SKU match
+        - name: nameRegex
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by regular expression match on product name
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/ProductStatus'
+          description: Filter by product lifecycle status
+        - name: sort
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [name, status, createdAt]
+            default: name
+          description: Field to sort by
+        - name: direction
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: asc
+          description: Sort direction
+      responses:
+        '200':
+          description: List of matching products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductResponse'
+        '400':
+          description: Invalid query parameters (such as malformed regular expression)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/products/{id}:
+    get:
+      summary: Get product by identifier
+      operationId: getProductById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Unique product identifier
+      responses:
+        '200':
+          description: Product details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      summary: Update product
+      operationId: updateProduct
+      description: Updates mutable product attributes by identifier.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Unique product identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProductRequest'
+      responses:
+        '200':
+          description: Product updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+        '400':
+          description: Validation error in request payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Updated SKU conflicts with existing product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Delete product
+      operationId: deleteProduct
+      description: Permanently removes the product record from the database.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Unique product identifier
+      responses:
+        '204':
+          description: Product permanently deleted
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    ProductStatus:
+      type: string
+      enum: [DRAFT, ACTIVE, ARCHIVED]
+
+    CreateProductRequest:
+      type: object
+      required:
+        - id
+        - sku
+        - name
+        - priceInCents
+        - currency
+        - status
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Client-generated unique identifier
+          example: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+        sku:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Stock keeping unit
+          example: PROD-1001
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Product human-readable name
+          example: Ergonomic Mechanical Keyboard
+        description:
+          type: string
+          nullable: true
+          description: Detailed product description
+          example: Wireless split keyboard with mechanical switches
+        priceInCents:
+          type: integer
+          minimum: 0
+          description: Price in integer cents
+          example: 12900
+        currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+          description: ISO-4217 three-letter currency code
+          example: USD
+        status:
+          $ref: '#/components/schemas/ProductStatus'
+
+    UpdateProductRequest:
+      type: object
+      required:
+        - sku
+        - name
+        - priceInCents
+        - currency
+        - status
+      properties:
+        sku:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: PROD-1001
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          example: Ergonomic Mechanical Keyboard Pro
+        description:
+          type: string
+          nullable: true
+          example: Updated description
+        priceInCents:
+          type: integer
+          minimum: 0
+          example: 14900
+        currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+          example: USD
+        status:
+          $ref: '#/components/schemas/ProductStatus'
+
+    ProductResponse:
+      type: object
+      required:
+        - id
+        - sku
+        - name
+        - priceInCents
+        - currency
+        - status
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+        sku:
+          type: string
+          example: PROD-1001
+        name:
+          type: string
+          example: Ergonomic Mechanical Keyboard
+        description:
+          type: string
+          nullable: true
+          example: Wireless split keyboard with mechanical switches
+        priceInCents:
+          type: integer
+          example: 12900
+        currency:
+          type: string
+          example: USD
+        status:
+          $ref: '#/components/schemas/ProductStatus'
+        createdAt:
+          type: string
+          format: date-time
+          example: '2026-11-10T12:00:00Z'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2026-11-10T12:00:00Z'
+
+    ErrorResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          example: Invalid input parameter
+        details:
+          type: array
+          items:
+            type: string
+          example: ["priceInCents must be greater than or equal to 0"]
+
