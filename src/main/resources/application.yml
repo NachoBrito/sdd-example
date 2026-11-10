@@ -1,6 +1,6 @@
 micronaut:
   application:
-    name: sdd-safe
+    name: sdd-example
   metrics:
     enabled: true
     export:

@@ -1,6 +1,6 @@
-# sdd-safe
+# sdd-example
 
-`sdd-safe` is a REST API project built with Java 25 and the Micronaut framework.
+`sdd-example` is a REST API project built with Java 25 and the Micronaut framework.
 The project follows Hexagonal Architecture and Domain-Driven Design principles.
 
 ## Features

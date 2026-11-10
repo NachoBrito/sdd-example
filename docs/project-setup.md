@@ -1,6 +1,6 @@
 # Project Setup and Conventions
 
-This document describes the technical configuration, architecture, and standards for the `sdd-safe` project.
+This document describes the technical configuration, architecture, and standards for the `sdd-example` project.
 
 ## 1. Technology Stack
 

@@ -1,4 +1,4 @@
-# sdd-safe Constitution
+# sdd-example Constitution
 
 ## Core Principles
 
@@ -182,7 +182,7 @@ Every code change must pass an objective, non-interpretive review prior to accep
 ## Governance
 
 ### Precedence Hierarchy
-Governance in `sdd-safe` is strictly ordered to prevent architectural drift and agent overreach:
+Governance in `sdd-example` is strictly ordered to prevent architectural drift and agent overreach:
 1. **Priority 1 (Absolute Precedence)**:
    - **Principle 1 (Minimum Viable Diff)**
    - **Principle 2 (Ambiguity Halts Execution)**

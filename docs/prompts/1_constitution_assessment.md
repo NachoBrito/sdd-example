@@ -1,6 +1,6 @@
 # Constitution Prompt Assessment: Options A, B, and C
 
-This document evaluates the three candidate prompts for generating the project constitution under Spec-Kit (`sdd-safe`):
+This document evaluates the three candidate prompts for generating the project constitution under Spec-Kit (`sdd-example`):
 
 - **Option A**: [`docs/prompts/1_constitution_option_a.md`](./1_constitution_option_a.md)
 - **Option B**: [`docs/prompts/1_constitution_option_b.md`](./1_constitution_option_b.md)

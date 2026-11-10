@@ -6,7 +6,11 @@ import io.swagger.v3.oas.annotations.info.Info;
 
 /** Starts the application. */
 @OpenAPIDefinition(
-    info = @Info(title = "sdd-safe", version = "${api.version}", description = "sdd-safe REST API"))
+    info =
+        @Info(
+            title = "sdd-example",
+            version = "${api.version}",
+            description = "sdd-example REST API"))
 public final class Application {
 
   private Application() {}
