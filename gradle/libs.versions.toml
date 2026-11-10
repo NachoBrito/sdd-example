@@ -1,0 +1,52 @@
+[versions]
+java = "25"
+micronaut-platform = "5.2.5"
+micronaut-gradle-plugin = "5.0.2"
+checkstyle = "14.4.0"
+pmd = "7.29.0"
+spotbugs-tool = "4.10.5"
+spotbugs-gradle-plugin = "6.5.13"
+pitest-tool = "1.30.2"
+pitest-junit5-plugin = "1.2.3"
+pitest-gradle-plugin = "1.19.0"
+archunit = "1.5.1"
+
+[libraries]
+micronaut-platform = { module = "io.micronaut.platform:micronaut-platform", version.ref = "micronaut-platform" }
+# Versions without an explicit "version.ref" come from the Micronaut platform BOM.
+micronaut-http-validation = { module = "io.micronaut:micronaut-http-validation" }
+micronaut-inject-java = { module = "io.micronaut:micronaut-inject-java" }
+micronaut-serde-processor = { module = "io.micronaut.serde:micronaut-serde-processor" }
+micronaut-serde-jackson = { module = "io.micronaut.serde:micronaut-serde-jackson" }
+micronaut-validation = { module = "io.micronaut.validation:micronaut-validation" }
+micronaut-validation-processor = { module = "io.micronaut.validation:micronaut-validation-processor" }
+micronaut-data-processor = { module = "io.micronaut.data:micronaut-data-processor" }
+micronaut-data-jdbc = { module = "io.micronaut.data:micronaut-data-jdbc" }
+micronaut-jdbc-hikari = { module = "io.micronaut.sql:micronaut-jdbc-hikari" }
+micronaut-liquibase = { module = "io.micronaut.liquibase:micronaut-liquibase" }
+micronaut-rabbitmq = { module = "io.micronaut.rabbitmq:micronaut-rabbitmq" }
+micronaut-openapi = { module = "io.micronaut.openapi:micronaut-openapi" }
+micronaut-openapi-annotations = { module = "io.micronaut.openapi:micronaut-openapi-annotations" }
+micronaut-sourcegen-annotations = { module = "io.micronaut.sourcegen:micronaut-sourcegen-annotations" }
+micronaut-sourcegen-generator-java = { module = "io.micronaut.sourcegen:micronaut-sourcegen-generator-java" }
+micronaut-micrometer-core = { module = "io.micronaut.micrometer:micronaut-micrometer-core" }
+micronaut-micrometer-observation-http = { module = "io.micronaut.micrometer:micronaut-micrometer-observation-http" }
+micronaut-micrometer-registry-otlp = { module = "io.micronaut.micrometer:micronaut-micrometer-registry-otlp" }
+mariadb-jdbc = { module = "org.mariadb.jdbc:mariadb-java-client" }
+logback-classic = { module = "ch.qos.logback:logback-classic" }
+snakeyaml = { module = "org.yaml:snakeyaml" }
+
+micronaut-test-junit5 = { module = "io.micronaut.test:micronaut-test-junit5" }
+micronaut-test-rest-assured = { module = "io.micronaut.test:micronaut-test-rest-assured" }
+junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api" }
+junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params" }
+junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine" }
+mockito-core = { module = "org.mockito:mockito-core" }
+mockito-junit-jupiter = { module = "org.mockito:mockito-junit-jupiter" }
+archunit-junit5 = { module = "com.tngtech.archunit:archunit-junit5", version.ref = "archunit" }
+
+[plugins]
+micronaut-application = { id = "io.micronaut.application", version.ref = "micronaut-gradle-plugin" }
+micronaut-test-resources = { id = "io.micronaut.test-resources", version.ref = "micronaut-gradle-plugin" }
+spotbugs = { id = "com.github.spotbugs", version.ref = "spotbugs-gradle-plugin" }
+pitest = { id = "info.solidsoft.pitest", version.ref = "pitest-gradle-plugin" }

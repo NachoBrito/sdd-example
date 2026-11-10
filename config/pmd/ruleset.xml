@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset name="sdd-safe"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+
+  <description>
+    Strict PMD rule set. All the categories are on. Each exclusion has a reason.
+    Read docs/static-analysis.md before you change this file.
+  </description>
+
+  <!-- Do not analyze the sources that annotation processors generate. -->
+  <exclude-pattern>.*/build/generated/.*</exclude-pattern>
+
+  <rule ref="category/java/bestpractices.xml">
+    <!-- JUnit 5 test assertions do not require descriptive messages on every assertion. -->
+    <exclude name="UnitTestAssertionsShouldIncludeMessage"/>
+    <!-- Avoid false positives on test version strings such as 1.2.3.4. -->
+    <exclude name="AvoidUsingHardCodedIP"/>
+  </rule>
+
+  <rule ref="category/java/codestyle.xml">
+    <!-- Conflicts with the Micronaut constructor injection and record style. -->
+    <exclude name="AtLeastOneConstructor"/>
+    <!-- Style choices that are not part of the Google Java Style. -->
+    <exclude name="MethodArgumentCouldBeFinal"/>
+    <exclude name="LocalVariableCouldBeFinal"/>
+    <exclude name="OnlyOneReturn"/>
+    <exclude name="ShortVariable"/>
+    <exclude name="LongVariable"/>
+    <exclude name="UseExplicitTypes"/>
+    <exclude name="CallSuperInConstructor"/>
+    <!-- Static imports are normal in tests (assertions, ArchUnit DSL). -->
+    <exclude name="TooManyStaticImports"/>
+    <!-- Conflicts with Google Java Style: declare variables close to where used. -->
+    <exclude name="LocalVariableDeclarationShouldBeAtStartOfBlock"/>
+    <!-- Conflicts with Google Java Style and JUnit 5 package-private tests. -->
+    <exclude name="CommentDefaultAccessModifier"/>
+    <!-- ArchUnit static final rules use camelCase (not ALL_CAPS constants). -->
+    <exclude name="FieldNamingConventions"/>
+    <!-- Conflicts with domain conditions and fluent condition builder naming. -->
+    <exclude name="LinguisticNaming"/>
+  </rule>
+
+  <rule ref="category/java/design.xml">
+    <!-- Too many false positives with fluent APIs and records. -->
+    <exclude name="LawOfDemeter"/>
+    <!-- Records and DTOs are data classes by design. -->
+    <exclude name="DataClass"/>
+    <!-- Needs a package list to work. ArchUnit controls the package dependencies. -->
+    <exclude name="LoosePackageCoupling"/>
+    <!-- Test suites (such as ArchUnit) are instantiated by test runners, not utility classes. -->
+    <exclude name="InstantiableUtilityClass"/>
+  </rule>
+
+  <rule ref="category/java/documentation.xml">
+    <!-- Checkstyle (Google Java Style) controls the Javadoc requirements. -->
+    <exclude name="CommentRequired"/>
+    <exclude name="CommentSize"/>
+  </rule>
+
+  <rule ref="category/java/errorprone.xml">
+    <!-- ArchUnit suites use @ArchTest fields rather than @Test methods. -->
+    <exclude name="TestClassWithoutTestCases"/>
+    <!-- Layer and architectural definitions legitimately repeat string identifiers. -->
+    <exclude name="AvoidDuplicateLiterals"/>
+  </rule>
+  <rule ref="category/java/multithreading.xml"/>
+  <rule ref="category/java/performance.xml"/>
+  <rule ref="category/java/security.xml"/>
+
+</ruleset>

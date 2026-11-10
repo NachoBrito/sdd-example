@@ -1,0 +1,24 @@
+micronaut:
+  application:
+    name: sdd-safe
+  metrics:
+    enabled: true
+    export:
+      otlp:
+        # Send the Micrometer metrics to an OpenTelemetry collector (OTLP).
+        enabled: true
+        url: ${OTEL_EXPORTER_OTLP_METRICS_ENDPOINT:`http://localhost:4318/v1/metrics`}
+
+datasources:
+  default:
+    # Micronaut Test Resources starts a MariaDB container when "url" is not set.
+    db-type: mariadb
+    dialect: MYSQL
+    driver-class-name: org.mariadb.jdbc.Driver
+
+liquibase:
+  datasources:
+    default:
+      change-log: classpath:db/changelog/db.changelog-master.xml
+
+# Micronaut Test Resources starts a RabbitMQ container when "rabbitmq.uri" is not set.
