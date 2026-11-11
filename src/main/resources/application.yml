@@ -22,3 +22,10 @@ liquibase:
       change-log: classpath:db/changelog/db.changelog-master.xml
 
 # Micronaut Test Resources starts a RabbitMQ container when "rabbitmq.uri" is not set.
+
+notification:
+  smtp:
+    host: ${SMTP_HOST:localhost}
+    port: ${SMTP_PORT:2525}
+    from: ${SMTP_FROM:no-reply@example.com}
+    timeout-ms: ${SMTP_TIMEOUT_MS:5000}

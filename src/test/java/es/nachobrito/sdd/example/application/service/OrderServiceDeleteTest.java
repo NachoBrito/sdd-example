@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import es.nachobrito.sdd.example.application.port.out.OrderEventPublisherPort;
 import es.nachobrito.sdd.example.application.port.out.OrderRepositoryPort;
 import es.nachobrito.sdd.example.domain.model.DeliveryAddress;
 import es.nachobrito.sdd.example.domain.model.InvoiceAddress;
@@ -28,6 +29,9 @@ class OrderServiceDeleteTest {
 
   @Mock
   private OrderRepositoryPort repository;
+
+  @Mock
+  private OrderEventPublisherPort eventPublisher;
 
   private OrderService service;
   private Instant now;
@@ -55,7 +59,7 @@ class OrderServiceDeleteTest {
   void setUp() {
     now = Instant.parse("2026-11-10T10:00:00Z");
     Clock fixedClock = Clock.fixed(now, ZoneOffset.UTC);
-    service = new OrderService(repository, fixedClock);
+    service = new OrderService(repository, eventPublisher, fixedClock);
   }
 
   @Test
@@ -102,6 +106,7 @@ class OrderServiceDeleteTest {
     service.deleteOrder(ORDER_ID);
 
     verify(repository).deleteById(ORDER_ID);
+    verify(eventPublisher).publishOrderCancelled(order);
   }
 
   @Test
@@ -115,5 +120,6 @@ class OrderServiceDeleteTest {
     service.deleteOrder(ORDER_ID);
 
     verify(repository).deleteById(ORDER_ID);
+    verify(eventPublisher).publishOrderCancelled(order);
   }
 }

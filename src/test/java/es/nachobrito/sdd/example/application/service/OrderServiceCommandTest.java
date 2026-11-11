@@ -3,10 +3,12 @@ package es.nachobrito.sdd.example.application.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import es.nachobrito.sdd.example.application.port.in.CreateOrderUseCase.CreateOrderCommand;
 import es.nachobrito.sdd.example.application.port.in.UpdateOrderUseCase.UpdateOrderCommand;
+import es.nachobrito.sdd.example.application.port.out.OrderEventPublisherPort;
 import es.nachobrito.sdd.example.application.port.out.OrderRepositoryPort;
 import es.nachobrito.sdd.example.domain.model.DeliveryAddress;
 import es.nachobrito.sdd.example.domain.model.DuplicateOrderIdentifierException;
@@ -33,6 +35,9 @@ class OrderServiceCommandTest {
   @Mock
   private OrderRepositoryPort repository;
 
+  @Mock
+  private OrderEventPublisherPort eventPublisher;
+
   private OrderService service;
   private Instant now;
 
@@ -50,7 +55,7 @@ class OrderServiceCommandTest {
   void setUp() {
     now = Instant.parse("2026-11-10T10:00:00Z");
     Clock fixedClock = Clock.fixed(now, ZoneOffset.UTC);
-    service = new OrderService(repository, fixedClock);
+    service = new OrderService(repository, eventPublisher, fixedClock);
   }
 
   @Test
@@ -68,6 +73,7 @@ class OrderServiceCommandTest {
 
     Order actual = service.createOrder(command);
     assertEquals(expected, actual);
+    verify(eventPublisher).publishOrderCreated(expected);
   }
 
   @Test
@@ -149,6 +155,25 @@ class OrderServiceCommandTest {
 
     Order updated = service.updateOrder(command);
     assertEquals("Jane Doe", updated.customerName());
+    verify(eventPublisher).publishOrderUpdated(updated);
+  }
+
+  @Test
+  void updateOrderToCancelledPublishesCancelledEvent() {
+    Order existing = Order.create(
+        ORDER_ID, "John Doe", "john@example.com", now, OrderStatus.PENDING, "USD",
+        DELIVERY, INVOICE, LINES);
+
+    when(repository.findById(ORDER_ID)).thenReturn(Optional.of(existing));
+    when(repository.update(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
+
+    UpdateOrderCommand command = new UpdateOrderCommand(
+        ORDER_ID, "John Doe", "john@example.com", now, OrderStatus.CANCELLED, "USD",
+        DELIVERY, INVOICE, LINES);
+
+    Order updated = service.updateOrder(command);
+    assertEquals(OrderStatus.CANCELLED, updated.status());
+    verify(eventPublisher).publishOrderCancelled(updated);
   }
 
   @Test

@@ -1,0 +1,162 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OrderLifecycleEvent",
+  "description": "Schema for asynchronous order lifecycle events published to RabbitMQ exchange sdd.orders",
+  "type": "object",
+  "required": [
+    "eventId",
+    "eventType",
+    "timestamp",
+    "order"
+  ],
+  "properties": {
+    "eventId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier for the event envelope"
+    },
+    "eventType": {
+      "type": "string",
+      "enum": ["CREATED", "UPDATED", "CANCELLED"],
+      "description": "Type of the lifecycle event"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 UTC timestamp of the event occurrence"
+    },
+    "order": {
+      "type": "object",
+      "required": [
+        "id",
+        "customerName",
+        "customerEmail",
+        "date",
+        "status",
+        "totalAmountInCents",
+        "currency",
+        "deliveryAddress",
+        "invoiceAddress",
+        "orderLines"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "customerName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "customerEmail": {
+          "type": "string",
+          "format": "email"
+        },
+        "date": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["PENDING", "PAID", "SHIPPED", "DELIVERED", "CANCELLED"]
+        },
+        "totalAmountInCents": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "currency": {
+          "type": "string",
+          "pattern": "^[A-Z]{3}$"
+        },
+        "deliveryAddress": {
+          "$ref": "#/$defs/Address"
+        },
+        "invoiceAddress": {
+          "$ref": "#/$defs/Address"
+        },
+        "orderLines": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/OrderLine"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "Address": {
+      "type": "object",
+      "required": [
+        "name",
+        "telephone",
+        "street",
+        "city",
+        "state",
+        "zipCode",
+        "country"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "telephone": {
+          "type": "string",
+          "minLength": 1
+        },
+        "street": {
+          "type": "string",
+          "minLength": 1
+        },
+        "complement": {
+          "type": ["string", "null"]
+        },
+        "city": {
+          "type": "string",
+          "minLength": 1
+        },
+        "state": {
+          "type": "string",
+          "minLength": 1
+        },
+        "zipCode": {
+          "type": "string",
+          "minLength": 1
+        },
+        "country": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "OrderLine": {
+      "type": "object",
+      "required": [
+        "productId",
+        "quantity",
+        "unitPriceInCents",
+        "lineTotalInCents"
+      ],
+      "properties": {
+        "productId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "quantity": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "unitPriceInCents": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "lineTotalInCents": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}
+

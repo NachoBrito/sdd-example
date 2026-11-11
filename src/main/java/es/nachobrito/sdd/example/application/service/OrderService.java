@@ -1,6 +1,7 @@
 package es.nachobrito.sdd.example.application.service;
 
 import es.nachobrito.sdd.example.application.port.in.OrderUseCase;
+import es.nachobrito.sdd.example.application.port.out.OrderEventPublisherPort;
 import es.nachobrito.sdd.example.application.port.out.OrderRepositoryPort;
 import es.nachobrito.sdd.example.domain.model.DuplicateOrderIdentifierException;
 import es.nachobrito.sdd.example.domain.model.InvalidOrderDataException;
@@ -17,32 +18,39 @@ import java.util.Objects;
 import java.util.UUID;
 
 /**
- * Application service implementing the order use cases.
+ * Application service implementing the order use cases and publishing lifecycle events.
  */
 @Singleton
 public class OrderService implements OrderUseCase {
 
   private final OrderRepositoryPort repository;
+  private final OrderEventPublisherPort eventPublisher;
   private final Clock clock;
 
   /**
-   * Constructs the service with default system UTC clock.
+   * Constructs the service with dependencies and default system UTC clock.
    *
    * @param repository the outbound repository port
+   * @param eventPublisher the outbound event publisher port
    */
   @Inject
-  public OrderService(OrderRepositoryPort repository) {
-    this(repository, Clock.systemUTC());
+  public OrderService(OrderRepositoryPort repository, OrderEventPublisherPort eventPublisher) {
+    this(repository, eventPublisher, Clock.systemUTC());
   }
 
   /**
-   * Constructs the OrderService with the repository and clock dependencies.
+   * Constructs the OrderService with repository, publisher, and clock dependencies.
    *
    * @param repository the outbound repository port
+   * @param eventPublisher the outbound event publisher port
    * @param clock the system clock
    */
-  public OrderService(OrderRepositoryPort repository, Clock clock) {
+  public OrderService(
+      OrderRepositoryPort repository,
+      OrderEventPublisherPort eventPublisher,
+      Clock clock) {
     this.repository = repository;
+    this.eventPublisher = eventPublisher;
     this.clock = clock;
   }
 
@@ -72,7 +80,9 @@ public class OrderService implements OrderUseCase {
         now,
         now);
 
-    return repository.save(order);
+    Order saved = repository.save(order);
+    eventPublisher.publishOrderCreated(saved);
+    return saved;
   }
 
   @Override
@@ -98,7 +108,13 @@ public class OrderService implements OrderUseCase {
         command.orderLines(),
         now);
 
-    return repository.update(updated);
+    Order saved = repository.update(updated);
+    if (saved.status() == OrderStatus.CANCELLED) {
+      eventPublisher.publishOrderCancelled(saved);
+    } else {
+      eventPublisher.publishOrderUpdated(saved);
+    }
+    return saved;
   }
 
   @Override
@@ -111,6 +127,7 @@ public class OrderService implements OrderUseCase {
     }
 
     repository.deleteById(id);
+    eventPublisher.publishOrderCancelled(existing);
   }
 
   @Override

@@ -1,0 +1,26 @@
+# RabbitMQ Messaging Topology Contract
+# Defines the exchange, queues, and bindings for order events and notifications
+
+exchange:
+  name: sdd.orders
+  type: topic
+  durable: true
+  autoDelete: false
+
+queues:
+  - name: sdd.orders.notifications
+    durable: true
+    exclusive: false
+    autoDelete: false
+    bindings:
+      - exchange: sdd.orders
+        routingKey: "order.*"
+
+routingKeys:
+  orderCreated: "order.created"
+  orderUpdated: "order.updated"
+  orderCancelled: "order.cancelled"
+
+contentType: "application/json"
+encoding: "UTF-8"
+
