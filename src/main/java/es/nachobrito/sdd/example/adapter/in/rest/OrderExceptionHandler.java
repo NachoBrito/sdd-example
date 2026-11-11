@@ -4,65 +4,46 @@ import es.nachobrito.sdd.example.adapter.in.rest.dto.ErrorResponse;
 import es.nachobrito.sdd.example.domain.model.DuplicateOrderIdentifierException;
 import es.nachobrito.sdd.example.domain.model.InvalidOrderDataException;
 import es.nachobrito.sdd.example.domain.model.OrderDeletionConflictException;
+import es.nachobrito.sdd.example.domain.model.OrderException;
 import es.nachobrito.sdd.example.domain.model.OrderNotFoundException;
+import io.micronaut.context.annotation.Requires;
+import io.micronaut.http.HttpRequest;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.HttpStatus;
-import io.micronaut.http.annotation.Controller;
-import io.micronaut.http.annotation.Error;
+import io.micronaut.http.annotation.Produces;
+import io.micronaut.http.server.exceptions.ExceptionHandler;
+import jakarta.inject.Singleton;
 
 /**
- * Controller providing global exception handlers for the Order REST API.
+ * Translates order domain exceptions into HTTP error responses.
  */
-@Controller("/v1/order-errors")
-public class OrderExceptionHandler {
+@Produces
+@Singleton
+@Requires(classes = {OrderException.class, ExceptionHandler.class})
+public class OrderExceptionHandler
+    implements ExceptionHandler<OrderException, HttpResponse<ErrorResponse>> {
 
   /**
-   * Handles missing order exceptions.
+   * Handles order domain exceptions.
    *
-   * @param exception the missing order exception
-   * @return 404 Not Found response
+   * @param request the HTTP request
+   * @param exception the order exception
+   * @return the HTTP error response
    */
-  @Error(global = true, exception = OrderNotFoundException.class)
-  public HttpResponse<ErrorResponse> onNotFound(OrderNotFoundException exception) {
-    return HttpResponse.notFound(new ErrorResponse(exception.getMessage()));
-  }
-
-  /**
-   * Handles duplicate order identifier exceptions.
-   *
-   * @param exception the duplicate identifier exception
-   * @return 409 Conflict response
-   */
-  @Error(global = true, exception = DuplicateOrderIdentifierException.class)
-  public HttpResponse<ErrorResponse> onDuplicateIdentifier(
-      DuplicateOrderIdentifierException exception) {
-    return HttpResponse.status(HttpStatus.CONFLICT)
-        .body(new ErrorResponse(exception.getMessage()));
-  }
-
-  /**
-   * Handles conflict when deleting non-deletable orders.
-   *
-   * @param exception the deletion conflict exception
-   * @return 409 Conflict response
-   */
-  @Error(global = true, exception = OrderDeletionConflictException.class)
-  public HttpResponse<ErrorResponse> onDeletionConflict(
-      OrderDeletionConflictException exception) {
-    return HttpResponse.status(HttpStatus.CONFLICT)
-        .body(new ErrorResponse(exception.getMessage()));
-  }
-
-  /**
-   * Handles invalid order domain data exceptions.
-   *
-   * @param exception the invalid order data exception
-   * @return 400 Bad Request response
-   */
-  @Error(global = true, exception = InvalidOrderDataException.class)
-  public HttpResponse<ErrorResponse> onInvalidOrderData(
-      InvalidOrderDataException exception) {
+  @Override
+  public HttpResponse<ErrorResponse> handle(
+      HttpRequest request, OrderException exception) {
+    if (exception instanceof OrderNotFoundException) {
+      return HttpResponse.notFound(new ErrorResponse(exception.getMessage()));
+    }
+    if (exception instanceof DuplicateOrderIdentifierException
+        || exception instanceof OrderDeletionConflictException) {
+      return HttpResponse.status(HttpStatus.CONFLICT)
+          .body(new ErrorResponse(exception.getMessage()));
+    }
+    if (exception instanceof InvalidOrderDataException) {
+      return HttpResponse.badRequest(new ErrorResponse(exception.getMessage()));
+    }
     return HttpResponse.badRequest(new ErrorResponse(exception.getMessage()));
   }
 }
-

@@ -5,7 +5,7 @@ import java.util.UUID;
 /**
  * Thrown when attempting to create a product with an identifier that already exists.
  */
-public class DuplicateIdentifierException extends RuntimeException {
+public class DuplicateIdentifierException extends ProductException {
 
   private static final long serialVersionUID = 1L;
 

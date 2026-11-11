@@ -65,6 +65,7 @@ Read [Static Analysis](static-analysis.md) for detailed architectural verificati
 - **Versioned paths**: All REST controllers must expose versioned paths (for example, `/v1/resources`, `/v2/resources`).
 - **Backward compatibility**: Existing endpoint contracts must remain backward compatible. Increment the major version path for breaking changes.
 - **OpenAPI documentation**: Controllers must declare OpenAPI annotations. Micronaut generates the OpenAPI document at build time.
+- **Error handling**: Use Micronaut `ExceptionHandler` classes instead of error controllers. Assign exactly one `ExceptionHandler` class to each REST controller. Domain exceptions extend a module-specific base exception (for example, `ProductException`).
 
 ## 5. Database and Migrations
 

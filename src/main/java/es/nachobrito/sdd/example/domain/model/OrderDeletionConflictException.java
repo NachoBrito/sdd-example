@@ -5,7 +5,7 @@ import java.util.UUID;
 /**
  * Thrown when an order cannot be deleted because of its current status.
  */
-public class OrderDeletionConflictException extends RuntimeException {
+public class OrderDeletionConflictException extends OrderException {
 
   private static final long serialVersionUID = 1L;
 

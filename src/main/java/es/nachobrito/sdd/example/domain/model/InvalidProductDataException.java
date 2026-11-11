@@ -3,7 +3,7 @@ package es.nachobrito.sdd.example.domain.model;
 /**
  * Thrown when product attributes violate domain model validation rules.
  */
-public class InvalidProductDataException extends RuntimeException {
+public class InvalidProductDataException extends ProductException {
 
   private static final long serialVersionUID = 1L;
 

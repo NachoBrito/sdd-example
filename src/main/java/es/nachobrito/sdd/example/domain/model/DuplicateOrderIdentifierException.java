@@ -5,7 +5,7 @@ import java.util.UUID;
 /**
  * Thrown when an order already exists with the specified identifier.
  */
-public class DuplicateOrderIdentifierException extends RuntimeException {
+public class DuplicateOrderIdentifierException extends OrderException {
 
   private static final long serialVersionUID = 1L;
 

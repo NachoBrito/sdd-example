@@ -3,7 +3,7 @@ package es.nachobrito.sdd.example.domain.model;
 /**
  * Thrown when attempting to use a SKU that already exists in the catalog.
  */
-public class DuplicateSkuException extends RuntimeException {
+public class DuplicateSkuException extends ProductException {
 
   private static final long serialVersionUID = 1L;
 

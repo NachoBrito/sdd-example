@@ -1,6 +1,7 @@
 package es.nachobrito.sdd.example.domain.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -8,6 +9,14 @@ import org.junit.jupiter.api.Test;
 class OrderExceptionsTest {
 
   private static final UUID ORDER_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
+
+  private static final class TestOrderException extends OrderException {
+    private static final long serialVersionUID = 1L;
+
+    TestOrderException(String message, Throwable cause) {
+      super(message, cause);
+    }
+  }
 
   @Test
   void orderNotFoundExceptionHasExpectedMessage() {
@@ -33,5 +42,18 @@ class OrderExceptionsTest {
     InvalidOrderDataException ex = new InvalidOrderDataException("Invalid order data");
     assertEquals("Invalid order data", ex.getMessage());
   }
-}
 
+  @Test
+  void invalidOrderDataExceptionHasExpectedCause() {
+    Throwable cause = new IllegalArgumentException("Root cause");
+    InvalidOrderDataException ex = new InvalidOrderDataException("Invalid order data", cause);
+    assertSame(cause, ex.getCause());
+  }
+
+  @Test
+  void orderExceptionWithCauseHasExpectedCause() {
+    Throwable cause = new IllegalArgumentException("Root cause");
+    OrderException ex = new TestOrderException("Failed", cause);
+    assertSame(cause, ex.getCause());
+  }
+}

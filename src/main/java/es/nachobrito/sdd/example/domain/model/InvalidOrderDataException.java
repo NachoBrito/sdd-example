@@ -3,7 +3,7 @@ package es.nachobrito.sdd.example.domain.model;
 /**
  * Thrown when order data violates domain invariants.
  */
-public class InvalidOrderDataException extends RuntimeException {
+public class InvalidOrderDataException extends OrderException {
 
   private static final long serialVersionUID = 1L;
 

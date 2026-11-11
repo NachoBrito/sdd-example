@@ -5,7 +5,7 @@ import java.util.UUID;
 /**
  * Thrown when a product is not found by its identifier.
  */
-public class ProductNotFoundException extends RuntimeException {
+public class ProductNotFoundException extends ProductException {
 
   private static final long serialVersionUID = 1L;
 

@@ -1,0 +1,48 @@
+openapi: 3.0.3
+info:
+  title: REST API Error Contract
+  description: >-
+    Standard error response contract across all REST controllers in the service.
+    This contract eliminates dedicated error endpoints and standardizes error
+    payload structures.
+  version: 1.0.0
+paths: {}
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          description: A human-readable description of the error.
+          example: Product not found for identifier 3fa85f64-5717-4562-b3fc-2c963f66afa6
+        details:
+          type: array
+          description: Optional list of specific violation or detail messages.
+          items:
+            type: string
+          example:
+            - "customerEmail: must be a well-formed email address"
+            - "orderLines: must not be empty"
+  responses:
+    BadRequestError:
+      description: Bad request error due to invalid domain data or validation failure.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFoundError:
+      description: Requested resource does not exist.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    ConflictError:
+      description: Resource state or unique identifier conflict.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+

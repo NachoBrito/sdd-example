@@ -5,7 +5,7 @@ import java.util.UUID;
 /**
  * Thrown when an order does not exist with the specified identifier.
  */
-public class OrderNotFoundException extends RuntimeException {
+public class OrderNotFoundException extends OrderException {
 
   private static final long serialVersionUID = 1L;
 
