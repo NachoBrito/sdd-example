@@ -10,5 +10,6 @@
                         https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
     <include file="db/changelog/002-create-products-table.xml"/>
+    <include file="db/changelog/003-create-orders-tables.xml"/>
 
 </databaseChangeLog>

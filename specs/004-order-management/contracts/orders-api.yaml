@@ -1,0 +1,509 @@
+openapi: 3.0.3
+info:
+  title: Order Management API
+  description: REST API for managing the Order aggregate with Hexagonal Architecture.
+  version: 1.0.0
+paths:
+  /v1/orders:
+    post:
+      summary: Create an order
+      operationId: createOrder
+      description: Creates a new order with client-supplied UUID, addresses, and order lines.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+      responses:
+        '201':
+          description: Order successfully created
+          headers:
+            Location:
+              schema:
+                type: string
+                example: /v1/orders/f47ac10b-58cc-4372-a567-0e02b2c3d479
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '400':
+          description: Validation error in request payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Order with specified identifier already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      summary: List and filter orders
+      operationId: listOrders
+      description: Retrieves orders with filtering by status, customer email, and date range, with sorting by date or status.
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/OrderStatus'
+          description: Filter by order status
+        - name: customerEmail
+          in: query
+          required: false
+          schema:
+            type: string
+            format: email
+          description: Filter by exact customer email
+        - name: startDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Filter by start timestamp (inclusive)
+        - name: endDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Filter by end timestamp (inclusive)
+        - name: sort
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [date, status]
+            default: date
+          description: Field to sort by
+        - name: direction
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: asc
+          description: Sort direction
+      responses:
+        '200':
+          description: List of matching orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrderResponse'
+        '400':
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/orders/{id}:
+    get:
+      summary: Get order by identifier
+      operationId: getOrder
+      description: Retrieves a single order record by its unique identifier.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Order unique identifier
+      responses:
+        '200':
+          description: Order details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '400':
+          description: Invalid UUID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Order not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      summary: Update an order
+      operationId: updateOrder
+      description: Updates the attributes, addresses, lines, or status of an existing order.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Order unique identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOrderRequest'
+      responses:
+        '200':
+          description: Order successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '400':
+          description: Validation error in request payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Order not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Delete an order
+      operationId: deleteOrder
+      description: Permanently removes an order with PENDING or CANCELLED status.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Order unique identifier
+      responses:
+        '204':
+          description: Order successfully deleted
+        '400':
+          description: Invalid UUID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Order not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Order cannot be deleted due to current status (PAID, SHIPPED, or DELIVERED)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    OrderStatus:
+      type: string
+      enum:
+        - PENDING
+        - PAID
+        - SHIPPED
+        - DELIVERED
+        - CANCELLED
+
+    DeliveryAddressDto:
+      type: object
+      required:
+        - name
+        - telephone
+        - street
+        - city
+        - state
+        - zipCode
+        - country
+      properties:
+        name:
+          type: string
+          example: Alice Smith
+        telephone:
+          type: string
+          example: "+1-555-123-4567"
+        street:
+          type: string
+          example: 123 Maple Street
+        complement:
+          type: string
+          nullable: true
+          example: Apt 4B
+        city:
+          type: string
+          example: Springfield
+        state:
+          type: string
+          example: IL
+        zipCode:
+          type: string
+          example: "62701"
+        country:
+          type: string
+          example: USA
+
+    InvoiceAddressDto:
+      type: object
+      required:
+        - name
+        - vatNumber
+        - telephone
+        - street
+        - city
+        - state
+        - zipCode
+        - country
+      properties:
+        name:
+          type: string
+          example: Acme Corporation
+        vatNumber:
+          type: string
+          example: US123456789
+        telephone:
+          type: string
+          example: "+1-555-987-6543"
+        street:
+          type: string
+          example: 456 Commercial Boulevard
+        complement:
+          type: string
+          nullable: true
+          example: Suite 200
+        city:
+          type: string
+          example: Chicago
+        state:
+          type: string
+          example: IL
+        zipCode:
+          type: string
+          example: "60601"
+        country:
+          type: string
+          example: USA
+
+    OrderLineRequest:
+      type: object
+      required:
+        - productId
+        - quantity
+        - unitPriceInCents
+      properties:
+        productId:
+          type: string
+          format: uuid
+          example: e7b0a708-41d3-4f9e-a6c9-3a32f04e8d35
+        quantity:
+          type: integer
+          minimum: 1
+          example: 2
+        unitPriceInCents:
+          type: integer
+          minimum: 0
+          example: 4999
+        lineTotalInCents:
+          type: integer
+          description: Optional client-provided line total; recalculated and enforced by the server.
+          example: 9998
+
+    OrderLineResponse:
+      type: object
+      required:
+        - productId
+        - quantity
+        - unitPriceInCents
+        - lineTotalInCents
+      properties:
+        productId:
+          type: string
+          format: uuid
+          example: e7b0a708-41d3-4f9e-a6c9-3a32f04e8d35
+        quantity:
+          type: integer
+          example: 2
+        unitPriceInCents:
+          type: integer
+          example: 4999
+        lineTotalInCents:
+          type: integer
+          example: 9998
+
+    CreateOrderRequest:
+      type: object
+      required:
+        - id
+        - customerName
+        - customerEmail
+        - currency
+        - deliveryAddress
+        - invoiceAddress
+        - orderLines
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+        customerName:
+          type: string
+          example: John Doe
+        customerEmail:
+          type: string
+          format: email
+          example: john.doe@example.com
+        date:
+          type: string
+          format: date-time
+          nullable: true
+          example: 2026-11-10T12:00:00Z
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+          nullable: true
+          default: PENDING
+        totalAmountInCents:
+          type: integer
+          nullable: true
+          description: Optional client-provided total; recalculated and enforced by the server.
+          example: 9998
+        currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+          example: USD
+        deliveryAddress:
+          $ref: '#/components/schemas/DeliveryAddressDto'
+        invoiceAddress:
+          $ref: '#/components/schemas/InvoiceAddressDto'
+        orderLines:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/OrderLineRequest'
+
+    UpdateOrderRequest:
+      type: object
+      required:
+        - customerName
+        - customerEmail
+        - date
+        - status
+        - currency
+        - deliveryAddress
+        - invoiceAddress
+        - orderLines
+      properties:
+        customerName:
+          type: string
+          example: John Doe
+        customerEmail:
+          type: string
+          format: email
+          example: john.doe@example.com
+        date:
+          type: string
+          format: date-time
+          example: 2026-11-10T12:00:00Z
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+          example: USD
+        deliveryAddress:
+          $ref: '#/components/schemas/DeliveryAddressDto'
+        invoiceAddress:
+          $ref: '#/components/schemas/InvoiceAddressDto'
+        orderLines:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/OrderLineRequest'
+
+    OrderResponse:
+      type: object
+      required:
+        - id
+        - customerName
+        - customerEmail
+        - date
+        - status
+        - totalAmountInCents
+        - currency
+        - deliveryAddress
+        - invoiceAddress
+        - orderLines
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+        customerName:
+          type: string
+          example: John Doe
+        customerEmail:
+          type: string
+          format: email
+          example: john.doe@example.com
+        date:
+          type: string
+          format: date-time
+          example: 2026-11-10T12:00:00Z
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        totalAmountInCents:
+          type: integer
+          example: 9998
+        currency:
+          type: string
+          example: USD
+        deliveryAddress:
+          $ref: '#/components/schemas/DeliveryAddressDto'
+        invoiceAddress:
+          $ref: '#/components/schemas/InvoiceAddressDto'
+        orderLines:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderLineResponse'
+        createdAt:
+          type: string
+          format: date-time
+          example: 2026-11-10T12:00:00Z
+        updatedAt:
+          type: string
+          format: date-time
+          example: 2026-11-10T12:05:00Z
+
+    ErrorResponse:
+      type: object
+      required:
+        - status
+        - message
+      properties:
+        status:
+          type: integer
+          example: 400
+        message:
+          type: string
+          example: Validation failed
+        details:
+          type: array
+          items:
+            type: string
+          example: ["customerEmail: must be a well-formed email address"]
+

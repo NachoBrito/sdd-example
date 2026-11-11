@@ -17,6 +17,8 @@
     <exclude name="UnitTestAssertionsShouldIncludeMessage"/>
     <!-- Avoid false positives on test version strings such as 1.2.3.4. -->
     <exclude name="AvoidUsingHardCodedIP"/>
+    <!-- Unit and integration tests legitimately verify multiple properties or use grouped assertions. -->
+    <exclude name="UnitTestContainsTooManyAsserts"/>
   </rule>
 
   <rule ref="category/java/codestyle.xml">
@@ -51,6 +53,8 @@
     <exclude name="LoosePackageCoupling"/>
     <!-- Test suites (such as ArchUnit) are instantiated by test runners, not utility classes. -->
     <exclude name="InstantiableUtilityClass"/>
+    <!-- Test suites and domain aggregates legitimately declare more than 10 methods. -->
+    <exclude name="TooManyMethods"/>
   </rule>
 
   <rule ref="category/java/documentation.xml">

@@ -62,6 +62,8 @@ The configuration disables specific rules that conflict with modern Java or proj
 - `TestClassWithoutTestCases`: ArchUnit test classes declare `@ArchTest` fields rather than `@Test` methods.
 - `AvoidDuplicateLiterals`: Package names and architectural layer names repeat legitimately in configuration and tests.
 - `AvoidUsingHardCodedIP`: Prevents false positive detections on version string patterns like `1.2.3.4`.
+- `UnitTestContainsTooManyAsserts`: Tests legitimately verify multiple properties on data objects and payloads.
+- `TooManyMethods`: Comprehensive test suites and domain aggregates legitimately declare more than 10 methods.
 
 ## 4. SpotBugs
 

@@ -22,7 +22,7 @@
   <!-- Injected dependencies in service and persistence adapter constructors. -->
   <Match>
     <Bug pattern="EI_EXPOSE_REP2"/>
-    <Class name="~.*(ProductService|ProductPersistenceAdapter)"/>
+    <Class name="~.*(Service|PersistenceAdapter)"/>
   </Match>
 
 </FindBugsFilter>
