@@ -46,8 +46,19 @@ Start the local Micronaut HTTP server:
 ./gradlew run
 ```
 
+### Run Locally with Docker Compose
+
+Start the application with all dependencies (database, message broker, email server, and telemetry):
+
+```bash
+docker compose up -d --build
+```
+
+Read [Running the Service Locally](docs/running/README.md) for detailed execution instructions and example requests.
+
 ## Documentation
 
+- [Running Locally](docs/running/README.md): Procedures to run the service and backing infrastructure with Docker Compose.
 - [Project Setup](docs/project-setup.md): Complete guide to architecture, libraries, conventions, and operational tasks.
 - [Static Analysis](docs/static-analysis.md): Rules, thresholds, and configurations for Checkstyle, PMD, SpotBugs, ArchUnit, and Pitest.
 - [Agent Instructions](AGENTS.md): Operational rules and coding constraints for AI coding agents.

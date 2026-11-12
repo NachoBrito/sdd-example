@@ -1,0 +1,14 @@
+.gradle/
+build/
+.git/
+.github/
+.idea/
+*.iml
+.vscode/
+.micronaut/
+out/
+bin/
+*.log
+specs/
+docs/
+

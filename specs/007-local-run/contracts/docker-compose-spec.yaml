@@ -1,0 +1,133 @@
+# Contract: Docker Compose Specification
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sdd-app
+    ports:
+      - "8080:8080"
+    environment:
+      DATASOURCES_DEFAULT_URL: jdbc:mariadb://mariadb:3306/sdd
+      DATASOURCES_DEFAULT_USERNAME: sdd
+      DATASOURCES_DEFAULT_PASSWORD: sdd
+      RABBITMQ_URI: amqp://guest:guest@rabbitmq:5672
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+      OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: http://otel-collector:4318/v1/metrics
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      mailpit:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+    networks:
+      - sdd-network
+
+  mariadb:
+    image: mariadb:11.4
+    container_name: sdd-mariadb
+    ports:
+      - "3306:3306"
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: sdd
+      MARIADB_USER: sdd
+      MARIADB_PASSWORD: sdd
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    networks:
+      - sdd-network
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: sdd-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_port_connectivity"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - sdd-network
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: sdd-mailpit
+    ports:
+      - "2525:1025"
+      - "8025:8025"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8025/api/v1/info"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sdd-network
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.114.0
+    container_name: sdd-otel-collector
+    ports:
+      - "4318:4318"
+      - "4317:4317"
+      - "8889:8889"
+    volumes:
+      - ./config/otel/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml:ro
+    networks:
+      - sdd-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: sdd-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      - otel-collector
+    networks:
+      - sdd-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: sdd-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./config/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    networks:
+      - sdd-network
+
+networks:
+  sdd-network:
+    driver: bridge
+
+volumes:
+  mariadb-data:
+  rabbitmq-data:
+

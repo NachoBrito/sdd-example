@@ -1,0 +1,76 @@
+### Product Catalog API Requests
+# Use this file to test product endpoints in IntelliJ IDEA or VS Code REST Client.
+
+@host = http://localhost:8080
+@productId = 11111111-1111-1111-1111-111111111111
+
+### 1. Create Product (201 Created)
+POST {{host}}/v1/products
+Content-Type: application/json
+
+{
+  "id": "{{productId}}",
+  "sku": "PROD-SAMPLE-001",
+  "name": "Ergonomic Mechanical Keyboard",
+  "description": "Customizable mechanical keyboard with silent tactile switches",
+  "priceInCents": 12999,
+  "currency": "EUR",
+  "status": "ACTIVE"
+}
+
+### 2. Retrieve Product by Identifier (200 OK)
+GET {{host}}/v1/products/{{productId}}
+Accept: application/json
+
+### 3. Update Existing Product (200 OK)
+PUT {{host}}/v1/products/{{productId}}
+Content-Type: application/json
+
+{
+  "sku": "PROD-SAMPLE-001",
+  "name": "Ergonomic Mechanical Keyboard Pro",
+  "description": "Updated model with wireless connectivity and aluminum chassis",
+  "priceInCents": 14999,
+  "currency": "EUR",
+  "status": "ACTIVE"
+}
+
+### 4. List Active Products (200 OK)
+GET {{host}}/v1/products?limit=10&offset=0&status=ACTIVE
+Accept: application/json
+
+### 5. Create Product - Validation Error (400 Bad Request)
+POST {{host}}/v1/products
+Content-Type: application/json
+
+{
+  "id": "22222222-2222-2222-2222-222222222222",
+  "sku": "PROD-INVALID",
+  "name": "",
+  "description": "Invalid product with blank name and negative price",
+  "priceInCents": -500,
+  "currency": "EUR",
+  "status": "ACTIVE"
+}
+
+### 6. Create Product - Conflict Error (409 Conflict)
+POST {{host}}/v1/products
+Content-Type: application/json
+
+{
+  "id": "{{productId}}",
+  "sku": "PROD-SAMPLE-001",
+  "name": "Duplicate Keyboard",
+  "description": "Attempt to create product with existing identifier and SKU",
+  "priceInCents": 9999,
+  "currency": "EUR",
+  "status": "ACTIVE"
+}
+
+### 7. Retrieve Non-Existent Product (404 Not Found)
+GET {{host}}/v1/products/00000000-0000-0000-0000-000000000000
+Accept: application/json
+
+### 8. Delete Product (204 No Content)
+DELETE {{host}}/v1/products/{{productId}}
+
