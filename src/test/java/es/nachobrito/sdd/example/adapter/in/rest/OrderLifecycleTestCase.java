@@ -14,8 +14,9 @@ class OrderLifecycleTestCase {
 
   @Test
   void createOrderReturnsCreatedStatus(RequestSpecification spec) {
+    UUID productId = createProduct(spec);
     UUID orderId = UUID.randomUUID();
-    String payload = createOrderPayload(orderId, "PENDING", "alice@example.com");
+    String payload = createOrderPayload(orderId, productId, "PENDING", "alice@example.com");
 
     int status = given(spec)
         .contentType(ContentType.JSON)
@@ -31,8 +32,9 @@ class OrderLifecycleTestCase {
 
   @Test
   void retrieveOrderReturnsOkStatus(RequestSpecification spec) {
+    UUID productId = createProduct(spec);
     UUID orderId = UUID.randomUUID();
-    String payload = createOrderPayload(orderId, "PENDING", "bob@example.com");
+    String payload = createOrderPayload(orderId, productId, "PENDING", "bob@example.com");
 
     given(spec)
         .contentType(ContentType.JSON)
@@ -54,8 +56,9 @@ class OrderLifecycleTestCase {
 
   @Test
   void updateOrderReturnsOkStatus(RequestSpecification spec) {
+    UUID productId = createProduct(spec);
     UUID orderId = UUID.randomUUID();
-    String payload = createOrderPayload(orderId, "PENDING", "charlie@example.com");
+    String payload = createOrderPayload(orderId, productId, "PENDING", "charlie@example.com");
 
     given(spec)
         .contentType(ContentType.JSON)
@@ -65,7 +68,7 @@ class OrderLifecycleTestCase {
         .then()
         .statusCode(201);
 
-    String updatePayload = updateOrderPayload("PAID", "charlie@example.com");
+    String updatePayload = updateOrderPayload(productId, "PAID", "charlie@example.com");
 
     int status = given(spec)
         .contentType(ContentType.JSON)
@@ -81,8 +84,9 @@ class OrderLifecycleTestCase {
 
   @Test
   void deletePendingOrderReturnsNoContentStatus(RequestSpecification spec) {
+    UUID productId = createProduct(spec);
     UUID orderId = UUID.randomUUID();
-    String payload = createOrderPayload(orderId, "PENDING", "dana@example.com");
+    String payload = createOrderPayload(orderId, productId, "PENDING", "dana@example.com");
 
     given(spec)
         .contentType(ContentType.JSON)
@@ -104,8 +108,9 @@ class OrderLifecycleTestCase {
 
   @Test
   void deletePaidOrderReturnsConflictStatus(RequestSpecification spec) {
+    UUID productId = createProduct(spec);
     UUID orderId = UUID.randomUUID();
-    String payload = createOrderPayload(orderId, "PAID", "elena@example.com");
+    String payload = createOrderPayload(orderId, productId, "PAID", "elena@example.com");
 
     given(spec)
         .contentType(ContentType.JSON)
@@ -127,8 +132,9 @@ class OrderLifecycleTestCase {
 
   @Test
   void getDeletedOrderReturnsNotFoundStatus(RequestSpecification spec) {
+    UUID productId = createProduct(spec);
     UUID orderId = UUID.randomUUID();
-    String payload = createOrderPayload(orderId, "CANCELLED", "frank@example.com");
+    String payload = createOrderPayload(orderId, productId, "CANCELLED", "frank@example.com");
 
     given(spec)
         .contentType(ContentType.JSON)
@@ -154,8 +160,32 @@ class OrderLifecycleTestCase {
     assertEquals(404, status);
   }
 
-  private static String createOrderPayload(UUID orderId, String status, String email) {
+  private static UUID createProduct(RequestSpecification spec) {
     UUID productId = UUID.randomUUID();
+    String skuSuffix = productId.toString().substring(0, 8);
+    String createPayload = "{"
+        + "\"id\":\"" + productId + "\","
+        + "\"sku\":\"PROD-" + skuSuffix + "\","
+        + "\"name\":\"Sample Product\","
+        + "\"description\":\"Sample product description\","
+        + "\"priceInCents\":1500,"
+        + "\"currency\":\"EUR\","
+        + "\"status\":\"ACTIVE\""
+        + "}";
+
+    given(spec)
+        .contentType(ContentType.JSON)
+        .body(createPayload)
+        .when()
+        .post("/v1/products")
+        .then()
+        .statusCode(201);
+
+    return productId;
+  }
+
+  private static String createOrderPayload(
+      UUID orderId, UUID productId, String status, String email) {
     return "{"
         + "\"id\":\"" + orderId + "\","
         + "\"customerName\":\"Customer Name\","
@@ -190,8 +220,7 @@ class OrderLifecycleTestCase {
         + "}";
   }
 
-  private static String updateOrderPayload(String status, String email) {
-    UUID productId = UUID.randomUUID();
+  private static String updateOrderPayload(UUID productId, String status, String email) {
     return "{"
         + "\"customerName\":\"Updated Name\","
         + "\"customerEmail\":\"" + email + "\","

@@ -151,7 +151,7 @@ class NotificationFlowTestCase implements TestPropertyProvider {
   void orderLifecycleEventsTriggerAsynchronousNotifications(RequestSpecification spec)
       throws InterruptedException {
     UUID orderId = UUID.randomUUID();
-    UUID productId = UUID.randomUUID();
+    UUID productId = createProduct(spec);
     String customerEmail = "customer-" + orderId + "@example.com";
 
     String createPayload = buildCreateOrderPayload(orderId, productId, customerEmail);
@@ -212,6 +212,30 @@ class NotificationFlowTestCase implements TestPropertyProvider {
       }
     }
     return null;
+  }
+
+  private static UUID createProduct(RequestSpecification spec) {
+    UUID productId = UUID.randomUUID();
+    String skuSuffix = productId.toString().substring(0, 8);
+    String createPayload = "{"
+        + "\"id\":\"" + productId + "\","
+        + "\"sku\":\"PROD-" + skuSuffix + "\","
+        + "\"name\":\"Sample Product\","
+        + "\"description\":\"Sample product description\","
+        + "\"priceInCents\":1500,"
+        + "\"currency\":\"EUR\","
+        + "\"status\":\"ACTIVE\""
+        + "}";
+
+    given(spec)
+        .contentType(ContentType.JSON)
+        .body(createPayload)
+        .when()
+        .post("/v1/products")
+        .then()
+        .statusCode(201);
+
+    return productId;
   }
 
   private String buildCreateOrderPayload(UUID orderId, UUID productId, String email) {

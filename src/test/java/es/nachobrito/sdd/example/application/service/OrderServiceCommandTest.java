@@ -10,8 +10,10 @@ import es.nachobrito.sdd.example.application.port.in.CreateOrderUseCase.CreateOr
 import es.nachobrito.sdd.example.application.port.in.UpdateOrderUseCase.UpdateOrderCommand;
 import es.nachobrito.sdd.example.application.port.out.OrderEventPublisherPort;
 import es.nachobrito.sdd.example.application.port.out.OrderRepositoryPort;
+import es.nachobrito.sdd.example.application.port.out.ProductRepositoryPort;
 import es.nachobrito.sdd.example.domain.model.DeliveryAddress;
 import es.nachobrito.sdd.example.domain.model.DuplicateOrderIdentifierException;
+import es.nachobrito.sdd.example.domain.model.InvalidOrderDataException;
 import es.nachobrito.sdd.example.domain.model.InvoiceAddress;
 import es.nachobrito.sdd.example.domain.model.Order;
 import es.nachobrito.sdd.example.domain.model.OrderLine;
@@ -19,7 +21,6 @@ import es.nachobrito.sdd.example.domain.model.OrderNotFoundException;
 import es.nachobrito.sdd.example.domain.model.OrderStatus;
 import java.time.Clock;
 import java.time.Instant;
-import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -27,6 +28,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,6 +36,9 @@ class OrderServiceCommandTest {
 
   @Mock
   private OrderRepositoryPort repository;
+
+  @Mock
+  private ProductRepositoryPort productRepository;
 
   @Mock
   private OrderEventPublisherPort eventPublisher;
@@ -54,8 +59,9 @@ class OrderServiceCommandTest {
   @BeforeEach
   void setUp() {
     now = Instant.parse("2026-11-10T10:00:00Z");
-    Clock fixedClock = Clock.fixed(now, ZoneOffset.UTC);
-    service = new OrderService(repository, eventPublisher, fixedClock);
+    Clock fixedClock = Clock.fixed(now, java.time.ZoneOffset.UTC);
+    service = new OrderService(repository, productRepository, eventPublisher, fixedClock);
+    Mockito.lenient().when(productRepository.existsById(PRODUCT_ID)).thenReturn(true);
   }
 
   @Test
@@ -185,5 +191,41 @@ class OrderServiceCommandTest {
         DELIVERY, INVOICE, LINES);
 
     assertThrows(OrderNotFoundException.class, () -> service.updateOrder(command));
+  }
+
+  @Test
+  void createOrderThrowsInvalidOrderDataExceptionWhenProductNotFound() {
+    UUID missingProductId = UUID.randomUUID();
+    List<OrderLine> missingLines = List.of(new OrderLine(missingProductId, 1, 1000));
+    CreateOrderCommand command = new CreateOrderCommand(
+        ORDER_ID, "John Doe", "john@example.com", null, null, "USD",
+        DELIVERY, INVOICE, missingLines);
+
+    when(repository.existsById(ORDER_ID)).thenReturn(false);
+    when(productRepository.existsById(missingProductId)).thenReturn(false);
+
+    InvalidOrderDataException ex =
+        assertThrows(InvalidOrderDataException.class, () -> service.createOrder(command));
+    assertEquals("Product not found with identifier: " + missingProductId, ex.getMessage());
+  }
+
+  @Test
+  void updateOrderThrowsInvalidOrderDataExceptionWhenProductNotFound() {
+    UUID missingProductId = UUID.randomUUID();
+    List<OrderLine> missingLines = List.of(new OrderLine(missingProductId, 1, 1000));
+    Order existing = Order.create(
+        ORDER_ID, "John Doe", "john@example.com", now, OrderStatus.PENDING, "USD",
+        DELIVERY, INVOICE, LINES);
+
+    when(repository.findById(ORDER_ID)).thenReturn(Optional.of(existing));
+    when(productRepository.existsById(missingProductId)).thenReturn(false);
+
+    UpdateOrderCommand command = new UpdateOrderCommand(
+        ORDER_ID, "Jane Doe", "jane@example.com", now, OrderStatus.PAID, "USD",
+        DELIVERY, INVOICE, missingLines);
+
+    InvalidOrderDataException ex =
+        assertThrows(InvalidOrderDataException.class, () -> service.updateOrder(command));
+    assertEquals("Product not found with identifier: " + missingProductId, ex.getMessage());
   }
 }

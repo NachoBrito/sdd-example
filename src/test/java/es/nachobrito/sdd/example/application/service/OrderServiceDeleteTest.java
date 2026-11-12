@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 
 import es.nachobrito.sdd.example.application.port.out.OrderEventPublisherPort;
 import es.nachobrito.sdd.example.application.port.out.OrderRepositoryPort;
+import es.nachobrito.sdd.example.application.port.out.ProductRepositoryPort;
 import es.nachobrito.sdd.example.domain.model.DeliveryAddress;
 import es.nachobrito.sdd.example.domain.model.InvoiceAddress;
 import es.nachobrito.sdd.example.domain.model.Order;
@@ -29,6 +30,9 @@ class OrderServiceDeleteTest {
 
   @Mock
   private OrderRepositoryPort repository;
+
+  @Mock
+  private ProductRepositoryPort productRepository;
 
   @Mock
   private OrderEventPublisherPort eventPublisher;
@@ -59,7 +63,7 @@ class OrderServiceDeleteTest {
   void setUp() {
     now = Instant.parse("2026-11-10T10:00:00Z");
     Clock fixedClock = Clock.fixed(now, ZoneOffset.UTC);
-    service = new OrderService(repository, eventPublisher, fixedClock);
+    service = new OrderService(repository, productRepository, eventPublisher, fixedClock);
   }
 
   @Test

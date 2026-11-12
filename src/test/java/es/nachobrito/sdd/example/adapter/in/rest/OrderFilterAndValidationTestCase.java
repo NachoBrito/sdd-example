@@ -16,8 +16,9 @@ class OrderFilterAndValidationTestCase {
 
   @Test
   void rejectDuplicateIdentifierReturnsConflict(RequestSpecification spec) {
+    UUID productId = createProduct(spec);
     UUID orderId = UUID.randomUUID();
-    String payload = sampleOrderPayload(orderId, "user1@example.com", 2, 1000);
+    String payload = sampleOrderPayload(orderId, productId, "user1@example.com", 2, 1000);
 
     given(spec)
         .contentType(ContentType.JSON)
@@ -42,7 +43,8 @@ class OrderFilterAndValidationTestCase {
   @Test
   void rejectInvalidEmailReturnsBadRequest(RequestSpecification spec) {
     UUID orderId = UUID.randomUUID();
-    String payload = sampleOrderPayload(orderId, "not-an-email", 1, 1000);
+    UUID productId = UUID.randomUUID();
+    String payload = sampleOrderPayload(orderId, productId, "not-an-email", 1, 1000);
 
     int status = given(spec)
         .contentType(ContentType.JSON)
@@ -59,7 +61,8 @@ class OrderFilterAndValidationTestCase {
   @Test
   void rejectNegativePriceReturnsBadRequest(RequestSpecification spec) {
     UUID orderId = UUID.randomUUID();
-    String payload = sampleOrderPayload(orderId, "valid@example.com", 1, -500);
+    UUID productId = UUID.randomUUID();
+    String payload = sampleOrderPayload(orderId, productId, "valid@example.com", 1, -500);
 
     int status = given(spec)
         .contentType(ContentType.JSON)
@@ -76,7 +79,27 @@ class OrderFilterAndValidationTestCase {
   @Test
   void rejectZeroQuantityReturnsBadRequest(RequestSpecification spec) {
     UUID orderId = UUID.randomUUID();
-    String payload = sampleOrderPayload(orderId, "valid@example.com", 0, 500);
+    UUID productId = UUID.randomUUID();
+    String payload = sampleOrderPayload(orderId, productId, "valid@example.com", 0, 500);
+
+    int status = given(spec)
+        .contentType(ContentType.JSON)
+        .body(payload)
+        .when()
+        .post(ORDERS_PATH)
+        .then()
+        .extract()
+        .statusCode();
+
+    assertEquals(400, status);
+  }
+
+  @Test
+  void rejectUnexistingProductReturnsBadRequest(RequestSpecification spec) {
+    UUID orderId = UUID.randomUUID();
+    UUID unexistingProductId = UUID.randomUUID();
+    String payload =
+        sampleOrderPayload(orderId, unexistingProductId, "valid@example.com", 1, 1000);
 
     int status = given(spec)
         .contentType(ContentType.JSON)
@@ -92,8 +115,9 @@ class OrderFilterAndValidationTestCase {
 
   @Test
   void filterOrdersByStatusReturnsOk(RequestSpecification spec) {
+    UUID productId = createProduct(spec);
     UUID orderId = UUID.randomUUID();
-    String payload = sampleOrderPayload(orderId, "filter-status@example.com", 1, 1000);
+    String payload = sampleOrderPayload(orderId, productId, "filter-status@example.com", 1, 1000);
 
     given(spec)
         .contentType(ContentType.JSON)
@@ -116,9 +140,10 @@ class OrderFilterAndValidationTestCase {
 
   @Test
   void filterOrdersByEmailAndSortReturnsOk(RequestSpecification spec) {
+    UUID productId = createProduct(spec);
     UUID orderId = UUID.randomUUID();
     String email = "sort-test-" + orderId.toString().substring(0, 8) + "@example.com";
-    String payload = sampleOrderPayload(orderId, email, 1, 1000);
+    String payload = sampleOrderPayload(orderId, productId, email, 1, 1000);
 
     given(spec)
         .contentType(ContentType.JSON)
@@ -141,9 +166,32 @@ class OrderFilterAndValidationTestCase {
     assertEquals(200, status);
   }
 
-  private static String sampleOrderPayload(
-      UUID orderId, String email, int quantity, int unitPriceInCents) {
+  private static UUID createProduct(RequestSpecification spec) {
     UUID productId = UUID.randomUUID();
+    String skuSuffix = productId.toString().substring(0, 8);
+    String createPayload = "{"
+        + "\"id\":\"" + productId + "\","
+        + "\"sku\":\"PROD-" + skuSuffix + "\","
+        + "\"name\":\"Sample Product\","
+        + "\"description\":\"Sample product description\","
+        + "\"priceInCents\":1000,"
+        + "\"currency\":\"EUR\","
+        + "\"status\":\"ACTIVE\""
+        + "}";
+
+    given(spec)
+        .contentType(ContentType.JSON)
+        .body(createPayload)
+        .when()
+        .post("/v1/products")
+        .then()
+        .statusCode(201);
+
+    return productId;
+  }
+
+  private static String sampleOrderPayload(
+      UUID orderId, UUID productId, String email, int quantity, int unitPriceInCents) {
     return "{"
         + "\"id\":\"" + orderId + "\","
         + "\"customerName\":\"Customer\","

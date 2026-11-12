@@ -3,10 +3,12 @@ package es.nachobrito.sdd.example.application.service;
 import es.nachobrito.sdd.example.application.port.in.OrderUseCase;
 import es.nachobrito.sdd.example.application.port.out.OrderEventPublisherPort;
 import es.nachobrito.sdd.example.application.port.out.OrderRepositoryPort;
+import es.nachobrito.sdd.example.application.port.out.ProductRepositoryPort;
 import es.nachobrito.sdd.example.domain.model.DuplicateOrderIdentifierException;
 import es.nachobrito.sdd.example.domain.model.InvalidOrderDataException;
 import es.nachobrito.sdd.example.domain.model.Order;
 import es.nachobrito.sdd.example.domain.model.OrderDeletionConflictException;
+import es.nachobrito.sdd.example.domain.model.OrderLine;
 import es.nachobrito.sdd.example.domain.model.OrderNotFoundException;
 import es.nachobrito.sdd.example.domain.model.OrderStatus;
 import jakarta.inject.Inject;
@@ -24,32 +26,40 @@ import java.util.UUID;
 public class OrderService implements OrderUseCase {
 
   private final OrderRepositoryPort repository;
+  private final ProductRepositoryPort productRepository;
   private final OrderEventPublisherPort eventPublisher;
   private final Clock clock;
 
   /**
    * Constructs the service with dependencies and default system UTC clock.
    *
-   * @param repository the outbound repository port
+   * @param repository the outbound order repository port
+   * @param productRepository the outbound product repository port
    * @param eventPublisher the outbound event publisher port
    */
   @Inject
-  public OrderService(OrderRepositoryPort repository, OrderEventPublisherPort eventPublisher) {
-    this(repository, eventPublisher, Clock.systemUTC());
+  public OrderService(
+      OrderRepositoryPort repository,
+      ProductRepositoryPort productRepository,
+      OrderEventPublisherPort eventPublisher) {
+    this(repository, productRepository, eventPublisher, Clock.systemUTC());
   }
 
   /**
-   * Constructs the OrderService with repository, publisher, and clock dependencies.
+   * Constructs the service with repository, publisher, and clock dependencies.
    *
-   * @param repository the outbound repository port
+   * @param repository the outbound order repository port
+   * @param productRepository the outbound product repository port
    * @param eventPublisher the outbound event publisher port
    * @param clock the system clock
    */
   public OrderService(
       OrderRepositoryPort repository,
+      ProductRepositoryPort productRepository,
       OrderEventPublisherPort eventPublisher,
       Clock clock) {
     this.repository = repository;
+    this.productRepository = productRepository;
     this.eventPublisher = eventPublisher;
     this.clock = clock;
   }
@@ -60,6 +70,8 @@ public class OrderService implements OrderUseCase {
     if (repository.existsById(command.id())) {
       throw new DuplicateOrderIdentifierException(command.id());
     }
+
+    validateProductExistence(command.orderLines());
 
     Instant now = clock.instant();
     Instant orderDate = command.date() != null ? command.date() : now;
@@ -95,6 +107,9 @@ public class OrderService implements OrderUseCase {
   public Order updateOrder(UpdateOrderCommand command) {
     Objects.requireNonNull(command, "Command cannot be null");
     Order existing = getOrder(command.id());
+
+    validateProductExistence(command.orderLines());
+
     Instant now = clock.instant();
 
     Order updated = existing.withUpdatedAttributes(
@@ -146,5 +161,14 @@ public class OrderService implements OrderUseCase {
         end,
         query.sortField(),
         query.direction());
+  }
+
+  private void validateProductExistence(List<OrderLine> orderLines) {
+    for (OrderLine line : orderLines) {
+      if (!productRepository.existsById(line.productId())) {
+        throw new InvalidOrderDataException(
+            "Product not found with identifier: " + line.productId());
+      }
+    }
   }
 }

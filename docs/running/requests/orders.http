@@ -123,7 +123,46 @@ Content-Type: application/json
   "orderLines": []
 }
 
-### 6. Create Order - Conflict Error (409 Conflict)
+### 6. Create Order - Non-Existent Product Error (400 Bad Request)
+POST {{host}}/v1/orders
+Content-Type: application/json
+
+{
+  "id": "55555555-5555-5555-5555-555555555555",
+  "customerName": "Jane Doe",
+  "customerEmail": "jane.doe@example.com",
+  "currency": "EUR",
+  "deliveryAddress": {
+    "name": "Jane Doe",
+    "telephone": "+34-91-123-4567",
+    "street": "123 Gran Via",
+    "complement": "Apt 4B",
+    "city": "Madrid",
+    "state": "Madrid",
+    "zipCode": "28013",
+    "country": "Spain"
+  },
+  "invoiceAddress": {
+    "name": "Jane Doe",
+    "vatNumber": "ES12345678Z",
+    "telephone": "+34-91-123-4567",
+    "street": "123 Gran Via",
+    "complement": "Apt 4B",
+    "city": "Madrid",
+    "state": "Madrid",
+    "zipCode": "28013",
+    "country": "Spain"
+  },
+  "orderLines": [
+    {
+      "productId": "00000000-0000-0000-0000-000000000000",
+      "quantity": 1,
+      "unitPriceInCents": 12999
+    }
+  ]
+}
+
+### 7. Create Order - Conflict Error (409 Conflict)
 POST {{host}}/v1/orders
 Content-Type: application/json
 
@@ -162,9 +201,49 @@ Content-Type: application/json
   ]
 }
 
-### 7. Retrieve Non-Existent Order (404 Not Found)
+### 8. Retrieve Non-Existent Order (404 Not Found)
 GET {{host}}/v1/orders/00000000-0000-0000-0000-000000000000
 Accept: application/json
 
-### 8. Cancel / Delete Order (204 No Content)
+### 9. Cancel / Delete Order (204 No Content)
 DELETE {{host}}/v1/orders/{{orderId}}
+
+### 10. Update Order - Non-Existent Product Error (400 Bad Request)
+PUT {{host}}/v1/orders/{{orderId}}
+Content-Type: application/json
+
+{
+  "customerName": "Jane Doe Updated",
+  "customerEmail": "jane.doe@example.com",
+  "date": "2026-11-12T08:00:00Z",
+  "status": "PENDING",
+  "currency": "EUR",
+  "deliveryAddress": {
+    "name": "Jane Doe Updated",
+    "telephone": "+34-91-123-4567",
+    "street": "456 Paseo de la Castellana",
+    "complement": "Floor 3",
+    "city": "Madrid",
+    "state": "Madrid",
+    "zipCode": "28046",
+    "country": "Spain"
+  },
+  "invoiceAddress": {
+    "name": "Jane Doe Updated",
+    "vatNumber": "ES12345678Z",
+    "telephone": "+34-91-123-4567",
+    "street": "456 Paseo de la Castellana",
+    "complement": "Floor 3",
+    "city": "Madrid",
+    "state": "Madrid",
+    "zipCode": "28046",
+    "country": "Spain"
+  },
+  "orderLines": [
+    {
+      "productId": "00000000-0000-0000-0000-000000000000",
+      "quantity": 1,
+      "unitPriceInCents": 12999
+    }
+  ]
+}
