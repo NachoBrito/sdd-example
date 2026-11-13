@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 class OrderNullValidationTest {
 
   private static final UUID ORDER_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
+  private static final UUID USER_ID = UUID.fromString("33333333-3333-3333-3333-333333333333");
   private static final UUID PRODUCT_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
   private static final Instant NOW = Instant.parse("2026-11-10T12:00:00Z");
 
@@ -31,43 +32,43 @@ class OrderNullValidationTest {
 
   @Test
   void nullCustomerNameThrowsException() {
-    assertThrows(InvalidOrderDataException.class, () -> Order.create(
-        ORDER_ID, null, "john@example.com", NOW, OrderStatus.PENDING, "USD",
-        sampleDelivery(), sampleInvoice(), sampleLines()));
+    assertThrows(InvalidOrderDataException.class, () -> Order.create(new Order.OrderDraft(
+        ORDER_ID, USER_ID, null, "john@example.com", NOW, OrderStatus.PENDING, "USD",
+        sampleDelivery(), sampleInvoice(), sampleLines())));
   }
 
   @Test
   void nullCustomerEmailThrowsException() {
-    assertThrows(InvalidOrderDataException.class, () -> Order.create(
-        ORDER_ID, "John", null, NOW, OrderStatus.PENDING, "USD",
-        sampleDelivery(), sampleInvoice(), sampleLines()));
+    assertThrows(InvalidOrderDataException.class, () -> Order.create(new Order.OrderDraft(
+        ORDER_ID, USER_ID, "John", null, NOW, OrderStatus.PENDING, "USD",
+        sampleDelivery(), sampleInvoice(), sampleLines())));
   }
 
   @Test
   void nullCurrencyThrowsException() {
-    assertThrows(InvalidOrderDataException.class, () -> Order.create(
-        ORDER_ID, "John", "john@example.com", NOW, OrderStatus.PENDING, null,
-        sampleDelivery(), sampleInvoice(), sampleLines()));
+    assertThrows(InvalidOrderDataException.class, () -> Order.create(new Order.OrderDraft(
+        ORDER_ID, USER_ID, "John", "john@example.com", NOW, OrderStatus.PENDING, null,
+        sampleDelivery(), sampleInvoice(), sampleLines())));
   }
 
   @Test
   void nullOrderLinesThrowsException() {
-    assertThrows(InvalidOrderDataException.class, () -> Order.create(
-        ORDER_ID, "John", "john@example.com", NOW, OrderStatus.PENDING, "USD",
-        sampleDelivery(), sampleInvoice(), null));
+    assertThrows(InvalidOrderDataException.class, () -> Order.create(new Order.OrderDraft(
+        ORDER_ID, USER_ID, "John", "john@example.com", NOW, OrderStatus.PENDING, "USD",
+        sampleDelivery(), sampleInvoice(), null)));
   }
 
   @Test
   void nullCreatedAtThrowsException() {
     assertThrows(InvalidOrderDataException.class, () -> new Order(
-        ORDER_ID, "John", "john@example.com", NOW, OrderStatus.PENDING, 10_000, "USD",
+        ORDER_ID, USER_ID, "John", "john@example.com", NOW, OrderStatus.PENDING, 10_000, "USD",
         sampleDelivery(), sampleInvoice(), sampleLines(), null, NOW));
   }
 
   @Test
   void nullUpdatedAtThrowsException() {
     assertThrows(InvalidOrderDataException.class, () -> new Order(
-        ORDER_ID, "John", "john@example.com", NOW, OrderStatus.PENDING, 10_000, "USD",
+        ORDER_ID, USER_ID, "John", "john@example.com", NOW, OrderStatus.PENDING, 10_000, "USD",
         sampleDelivery(), sampleInvoice(), sampleLines(), NOW, null));
   }
 

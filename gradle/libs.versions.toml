@@ -25,6 +25,8 @@ micronaut-data-jdbc = { module = "io.micronaut.data:micronaut-data-jdbc" }
 micronaut-jdbc-hikari = { module = "io.micronaut.sql:micronaut-jdbc-hikari" }
 micronaut-liquibase = { module = "io.micronaut.liquibase:micronaut-liquibase" }
 micronaut-rabbitmq = { module = "io.micronaut.rabbitmq:micronaut-rabbitmq" }
+micronaut-security-annotations = { module = "io.micronaut.security:micronaut-security-annotations" }
+micronaut-security-jwt = { module = "io.micronaut.security:micronaut-security-jwt" }
 micronaut-openapi = { module = "io.micronaut.openapi:micronaut-openapi" }
 micronaut-openapi-annotations = { module = "io.micronaut.openapi:micronaut-openapi-annotations" }
 micronaut-sourcegen-annotations = { module = "io.micronaut.sourcegen:micronaut-sourcegen-annotations" }

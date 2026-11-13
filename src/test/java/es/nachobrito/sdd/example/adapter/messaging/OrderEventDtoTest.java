@@ -23,11 +23,13 @@ class OrderEventDtoTest {
 
   private Order order;
   private UUID orderId;
+  private UUID userId;
   private UUID productId;
 
   @BeforeEach
   void setUp() {
     orderId = UUID.randomUUID();
+    userId = UUID.randomUUID();
     productId = UUID.randomUUID();
 
     DeliveryAddress delivery = new DeliveryAddress(
@@ -38,6 +40,7 @@ class OrderEventDtoTest {
 
     order = new Order(
         orderId,
+        userId,
         "Eve",
         "eve@example.com",
         Instant.now(),
@@ -105,7 +108,7 @@ class OrderEventDtoTest {
 
     assertDoesNotThrow(() ->
         new OrderPayloadDto(
-            orderId, "Eve", "eve@example.com", Instant.now(), "PENDING",
+            orderId, userId, "Eve", "eve@example.com", Instant.now(), "PENDING",
             0, "EUR", address, address, List.of(line)));
 
     OrderPayloadDto payload = OrderPayloadDto.fromDomain(order);
@@ -172,47 +175,47 @@ class OrderEventDtoTest {
 
     assertThrows(NullPointerException.class, () ->
         new OrderPayloadDto(
-            null, "Eve", "eve@example.com", now, "PENDING",
+            null, userId, "Eve", "eve@example.com", now, "PENDING",
             2000, "EUR", address, address, lines));
     assertThrows(NullPointerException.class, () ->
         new OrderPayloadDto(
-            orderId, null, "eve@example.com", now, "PENDING",
+            orderId, userId, null, "eve@example.com", now, "PENDING",
             2000, "EUR", address, address, lines));
     assertThrows(NullPointerException.class, () ->
         new OrderPayloadDto(
-            orderId, "Eve", null, now, "PENDING",
+            orderId, userId, "Eve", null, now, "PENDING",
             2000, "EUR", address, address, lines));
     assertThrows(NullPointerException.class, () ->
         new OrderPayloadDto(
-            orderId, "Eve", "eve@example.com", null, "PENDING",
+            orderId, userId, "Eve", "eve@example.com", null, "PENDING",
             2000, "EUR", address, address, lines));
     assertThrows(NullPointerException.class, () ->
         new OrderPayloadDto(
-            orderId, "Eve", "eve@example.com", now, null,
+            orderId, userId, "Eve", "eve@example.com", now, null,
             2000, "EUR", address, address, lines));
     assertThrows(NullPointerException.class, () ->
         new OrderPayloadDto(
-            orderId, "Eve", "eve@example.com", now, "PENDING",
+            orderId, userId, "Eve", "eve@example.com", now, "PENDING",
             2000, null, address, address, lines));
     assertThrows(NullPointerException.class, () ->
         new OrderPayloadDto(
-            orderId, "Eve", "eve@example.com", now, "PENDING",
+            orderId, userId, "Eve", "eve@example.com", now, "PENDING",
             2000, "EUR", null, address, lines));
     assertThrows(NullPointerException.class, () ->
         new OrderPayloadDto(
-            orderId, "Eve", "eve@example.com", now, "PENDING",
+            orderId, userId, "Eve", "eve@example.com", now, "PENDING",
             2000, "EUR", address, null, lines));
     assertThrows(NullPointerException.class, () ->
         new OrderPayloadDto(
-            orderId, "Eve", "eve@example.com", now, "PENDING",
+            orderId, userId, "Eve", "eve@example.com", now, "PENDING",
             2000, "EUR", address, address, null));
     assertThrows(IllegalArgumentException.class, () ->
         new OrderPayloadDto(
-            orderId, "Eve", "eve@example.com", now, "PENDING",
+            orderId, userId, "Eve", "eve@example.com", now, "PENDING",
             2000, "EUR", address, address, List.of()));
     assertThrows(IllegalArgumentException.class, () ->
         new OrderPayloadDto(
-            orderId, "Eve", "eve@example.com", now, "PENDING",
+            orderId, userId, "Eve", "eve@example.com", now, "PENDING",
             -1, "EUR", address, address, lines));
 
     assertThrows(NullPointerException.class, () ->

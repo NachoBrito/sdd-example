@@ -1,8 +1,15 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
-import { createProductPayload, createOrderPayload } from '../helpers/payloads.js';
+import {
+  authHeaders,
+  createProductPayload,
+  createOrderPayload,
+  login
+} from '../helpers/payloads.js';
 
 const TARGET_URL = __ENV.TARGET_URL || 'http://localhost:8080';
+const ADMIN_USER = __ENV.ADMIN_USER || 'admin';
+const ADMIN_PASS = __ENV.ADMIN_PASS || 'admin1234';
 const DURATION = __ENV.DURATION || '5m';
 const VUS = parseInt(__ENV.VUS || '10', 10);
 
@@ -15,20 +22,17 @@ export const options = {
   },
 };
 
-const JSON_HEADERS = {
-  'Content-Type': 'application/json',
-  Accept: 'application/json',
-};
-
 /**
- * Setup lifecycle: populates initial products for sustained operations.
+ * Setup lifecycle: authenticates and populates initial products for sustained operations.
  */
 export function setup() {
+  const tokens = login(TARGET_URL, ADMIN_USER, ADMIN_PASS);
+  const headers = authHeaders(tokens.accessToken);
   const productIds = [];
 
   const listRes = http.get(
     `${TARGET_URL}/v1/products?limit=20&offset=0&status=ACTIVE`,
-    { headers: { Accept: 'application/json' } }
+    { headers: headers }
   );
 
   if (listRes.status === 200) {
@@ -50,7 +54,7 @@ export function setup() {
     const postRes = http.post(
       `${TARGET_URL}/v1/products`,
       payload,
-      { headers: JSON_HEADERS }
+      { headers: headers }
     );
 
     if (postRes.status === 201) {
@@ -63,10 +67,11 @@ export function setup() {
     }
   }
 
-  return { productIds: productIds };
+  return { productIds: productIds, token: tokens.accessToken };
 }
 
 export default function (data) {
+  const headers = authHeaders(data.token);
   const productIds = data.productIds || [];
   const actionRoll = Math.random();
 
@@ -74,7 +79,7 @@ export default function (data) {
     // 1. Catalog Browsing
     const res = http.get(
       `${TARGET_URL}/v1/products?limit=10&offset=0&status=ACTIVE`,
-      { headers: { Accept: 'application/json' } }
+      { headers: headers }
     );
     check(res, { 'status is 200': (r) => r.status === 200 });
   } else if (actionRoll < 0.75) {
@@ -83,7 +88,7 @@ export default function (data) {
       const pid = productIds[Math.floor(Math.random() * productIds.length)];
       const res = http.get(
         `${TARGET_URL}/v1/products/${pid}`,
-        { headers: { Accept: 'application/json' } }
+        { headers: headers }
       );
       check(res, { 'status is 200': (r) => r.status === 200 });
     }
@@ -94,7 +99,7 @@ export default function (data) {
       const res = http.post(
         `${TARGET_URL}/v1/orders`,
         orderPayload,
-        { headers: JSON_HEADERS }
+        { headers: headers }
       );
       check(res, { 'order created is 201': (r) => r.status === 201 });
     }
@@ -104,7 +109,7 @@ export default function (data) {
     const res = http.post(
       `${TARGET_URL}/v1/products`,
       payload,
-      { headers: JSON_HEADERS }
+      { headers: headers }
     );
     const created = check(res, { 'product created is 201': (r) => r.status === 201 });
     if (created && res.status === 201) {

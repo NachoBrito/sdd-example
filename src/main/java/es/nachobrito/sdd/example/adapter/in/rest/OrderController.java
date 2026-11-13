@@ -3,10 +3,7 @@ package es.nachobrito.sdd.example.adapter.in.rest;
 import es.nachobrito.sdd.example.adapter.in.rest.dto.CreateOrderRequest;
 import es.nachobrito.sdd.example.adapter.in.rest.dto.OrderResponse;
 import es.nachobrito.sdd.example.adapter.in.rest.dto.UpdateOrderRequest;
-import es.nachobrito.sdd.example.application.port.in.CreateOrderUseCase.CreateOrderCommand;
-import es.nachobrito.sdd.example.application.port.in.ListOrdersUseCase.ListOrdersQuery;
 import es.nachobrito.sdd.example.application.port.in.OrderUseCase;
-import es.nachobrito.sdd.example.application.port.in.UpdateOrderUseCase.UpdateOrderCommand;
 import es.nachobrito.sdd.example.domain.model.Order;
 import es.nachobrito.sdd.example.domain.model.OrderStatus;
 import io.micronaut.http.HttpResponse;
@@ -18,6 +15,7 @@ import io.micronaut.http.annotation.PathVariable;
 import io.micronaut.http.annotation.Post;
 import io.micronaut.http.annotation.Put;
 import io.micronaut.http.annotation.QueryValue;
+import io.micronaut.security.annotation.Secured;
 import io.micronaut.validation.Validated;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -55,6 +53,7 @@ public class OrderController {
    * @return 201 Created with the order and Location header
    */
   @Post
+  @Secured({"CUSTOMER"})
   @Operation(
       summary = "Create order",
       description = "Creates an order with client-generated identifier")
@@ -62,7 +61,7 @@ public class OrderController {
   @ApiResponse(responseCode = "400", description = "Validation error")
   @ApiResponse(responseCode = "409", description = "Order identifier already exists")
   public HttpResponse<OrderResponse> create(@Body @Valid CreateOrderRequest request) {
-    CreateOrderCommand command = request.toCommand();
+    var command = request.toCommand(null);
     Order created = orderUseCase.createOrder(command);
     URI location = URI.create("/v1/orders/" + created.id());
     return HttpResponse.created(OrderResponse.fromDomain(created), location);
@@ -75,6 +74,7 @@ public class OrderController {
    * @return 200 OK with order details
    */
   @Get("/{id}")
+  @Secured({"CUSTOMER", "ADMIN"})
   @Operation(summary = "Get order", description = "Retrieves an order by identifier")
   @ApiResponse(responseCode = "200", description = "Order found")
   @ApiResponse(responseCode = "404", description = "Order not found")
@@ -91,6 +91,7 @@ public class OrderController {
    * @return 200 OK with updated order details
    */
   @Put("/{id}")
+  @Secured({"ADMIN"})
   @Operation(summary = "Update order", description = "Updates an existing order by identifier")
   @ApiResponse(responseCode = "200", description = "Order updated")
   @ApiResponse(responseCode = "400", description = "Validation error")
@@ -98,7 +99,7 @@ public class OrderController {
   public OrderResponse update(
       @PathVariable UUID id,
       @Body @Valid UpdateOrderRequest request) {
-    UpdateOrderCommand command = request.toCommand(id);
+    var command = request.toCommand(id);
     Order updated = orderUseCase.updateOrder(command);
     return OrderResponse.fromDomain(updated);
   }
@@ -110,6 +111,7 @@ public class OrderController {
    * @return 204 No Content
    */
   @Delete("/{id}")
+  @Secured({"ADMIN"})
   @Operation(
       summary = "Delete order",
       description = "Permanently deletes an order with PENDING or CANCELLED status")
@@ -133,6 +135,7 @@ public class OrderController {
    * @return list of matching orders
    */
   @Get
+  @Secured({"CUSTOMER", "ADMIN"})
   @Operation(summary = "List orders", description = "Lists orders with filtering and sorting")
   @ApiResponse(responseCode = "200", description = "Matching orders")
   @ApiResponse(responseCode = "400", description = "Invalid query parameters")
@@ -143,8 +146,9 @@ public class OrderController {
       @QueryValue @Nullable Instant endDate,
       @QueryValue(defaultValue = "date") String sort,
       @QueryValue(defaultValue = "asc") String direction) {
-    ListOrdersQuery query =
-        new ListOrdersQuery(status, customerEmail, startDate, endDate, sort, direction);
+    var query =
+        new OrderUseCase.ListOrdersQuery(
+            status, customerEmail, startDate, endDate, sort, direction);
     return orderUseCase.listOrders(query).stream()
         .map(OrderResponse::fromDomain)
         .toList();

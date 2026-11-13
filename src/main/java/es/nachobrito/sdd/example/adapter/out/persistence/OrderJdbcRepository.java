@@ -59,6 +59,7 @@ public interface OrderJdbcRepository extends GenericRepository<OrderEntity, UUID
   /**
    * Searches and filters orders matching the given criteria with dynamic sorting.
    *
+   * @param userId optional owning user identifier filter
    * @param status optional status filter
    * @param customerEmail optional customer email filter
    * @param startDate optional start date filter
@@ -68,12 +69,14 @@ public interface OrderJdbcRepository extends GenericRepository<OrderEntity, UUID
    */
   @Query(
       "SELECT * FROM orders order_entity_"
-          + " WHERE (:status IS NULL OR :status = '' OR order_entity_.status = :status)"
+          + " WHERE (:userId IS NULL OR order_entity_.user_id = :userId)"
+          + " AND (:status IS NULL OR :status = '' OR order_entity_.status = :status)"
           + " AND (:customerEmail IS NULL OR :customerEmail = ''"
           + " OR order_entity_.customer_email = :customerEmail)"
           + " AND (:startDate IS NULL OR order_entity_.order_date >= :startDate)"
           + " AND (:endDate IS NULL OR order_entity_.order_date <= :endDate)")
   List<OrderEntity> search(
+      @Nullable UUID userId,
       @Nullable String status,
       @Nullable String customerEmail,
       @Nullable Instant startDate,

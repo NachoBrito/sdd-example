@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 class OrderEntityTest {
 
   private static final UUID ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
+  private static final UUID USER_ID = UUID.fromString("33333333-3333-3333-3333-333333333333");
   private static final UUID PROD_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
   private static final Instant NOW = Instant.parse("2026-11-10T12:00:00Z");
 
@@ -43,7 +44,7 @@ class OrderEntityTest {
         "12345", "Country");
     OrderLine line = new OrderLine(PROD_ID, 2, 2_500);
     return new Order(
-        ID, "John Doe", "john@example.com", NOW, OrderStatus.PENDING, 5_000, "EUR",
+        ID, USER_ID, "John Doe", "john@example.com", NOW, OrderStatus.PENDING, 5_000, "EUR",
         delivery, invoice, List.of(line), NOW, NOW);
   }
 }

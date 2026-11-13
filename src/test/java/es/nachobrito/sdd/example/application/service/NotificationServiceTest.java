@@ -40,6 +40,7 @@ class NotificationServiceTest {
     OrderLine line = new OrderLine(UUID.randomUUID(), 1, 1000, 1000);
     Order order = new Order(
         UUID.randomUUID(),
+        UUID.randomUUID(),
         "Alice",
         "alice@example.com",
         Instant.now(),

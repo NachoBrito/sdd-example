@@ -1,6 +1,30 @@
 micronaut:
   application:
     name: sdd-example
+  security:
+    enabled: true
+    reject-not-found: false
+    authentication: bearer
+    intercept-url-map:
+      - pattern: /health
+        access:
+          - isAnonymous()
+      - pattern: /swagger-ui/**
+        access:
+          - isAnonymous()
+      - pattern: /openapi/**
+        access:
+          - isAnonymous()
+    token:
+      jwt:
+        signatures:
+          secret:
+            generator:
+              secret: ${JWT_SECRET:sdd-example-dev-jwt-secret-key-min-32-bytes-long!}
+              jws-algorithm: HS256
+        generator:
+          access-token:
+            expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:3600}
   metrics:
     enabled: true
     binders:
@@ -33,3 +57,8 @@ notification:
     port: ${SMTP_PORT:2525}
     from: ${SMTP_FROM:no-reply@example.com}
     timeout-ms: ${SMTP_TIMEOUT_MS:5000}
+
+auth:
+  token:
+    access-expiration-seconds: ${JWT_ACCESS_TOKEN_EXPIRATION:3600}
+    refresh-expiration-seconds: ${JWT_REFRESH_TOKEN_EXPIRATION:604800}

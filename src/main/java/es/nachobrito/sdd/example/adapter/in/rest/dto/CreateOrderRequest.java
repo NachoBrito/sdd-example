@@ -60,13 +60,15 @@ public record CreateOrderRequest(
   }
 
   /**
-   * Converts this request to a CreateOrderCommand.
+   * Converts this request to a CreateOrderCommand for the given owning user.
    *
+   * @param userId the owning user identifier
    * @return the command instance
    */
-  public CreateOrderCommand toCommand() {
+  public CreateOrderCommand toCommand(UUID userId) {
     return new CreateOrderCommand(
         this.id,
+        userId,
         this.customerName,
         this.customerEmail,
         this.date,

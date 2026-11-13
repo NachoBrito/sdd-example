@@ -8,6 +8,7 @@ The project follows Hexagonal Architecture and Domain-Driven Design principles.
 - **Language and Framework**: Java 25 and Micronaut 5.2.5.
 - **Architecture**: Hexagonal architecture with isolated domain models and ports.
 - **API Specification**: OpenAPI 3 with versioned URL paths (`/v1/...`).
+- **Authentication & Authorization**: JWT bearer authentication (`/v1/auth/*`) with `ADMIN`, `CUSTOMER`, and `CATALOG` roles.
 - **Database**: MariaDB with automated Liquibase migrations.
 - **Event Bus**: RabbitMQ for asynchronous event messaging.
 - **Telemetry**: OpenTelemetry metric collection through Micrometer and structured JSON logging.

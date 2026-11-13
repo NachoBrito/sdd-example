@@ -32,6 +32,7 @@ class OrderPersistenceAdapterSortTest {
   private OrderPersistenceAdapter adapter;
 
   private static final UUID ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
+  private static final UUID USER_ID = UUID.fromString("33333333-3333-3333-3333-333333333333");
   private static final UUID PROD_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
   private static final Instant NOW = Instant.parse("2026-11-10T12:00:00Z");
 
@@ -46,11 +47,11 @@ class OrderPersistenceAdapterSortTest {
     OrderEntity entity = OrderEntity.fromDomain(order);
     OrderLineEntity lineEntity = OrderLineEntity.fromDomain(
         UUID.randomUUID(), ID, order.orderLines().getFirst());
-    when(orderRepository.search(any(), any(), any(), any(), any(Sort.class)))
+    when(orderRepository.search(any(), any(), any(), any(), any(), any(Sort.class)))
         .thenReturn(List.of(entity));
     when(orderLineRepository.findByOrderId(ID)).thenReturn(List.of(lineEntity));
 
-    List<Order> orders = adapter.findAll(OrderStatus.PENDING, "john@example.com",
+    List<Order> orders = adapter.findAll(USER_ID, OrderStatus.PENDING, "john@example.com",
         NOW, NOW, "status", "desc");
 
     assertEquals(List.of(order), orders);
@@ -62,11 +63,11 @@ class OrderPersistenceAdapterSortTest {
     OrderEntity entity = OrderEntity.fromDomain(order);
     OrderLineEntity lineEntity = OrderLineEntity.fromDomain(
         UUID.randomUUID(), ID, order.orderLines().getFirst());
-    when(orderRepository.search(any(), any(), any(), any(), any(Sort.class)))
+    when(orderRepository.search(any(), any(), any(), any(), any(), any(Sort.class)))
         .thenReturn(List.of(entity));
     when(orderLineRepository.findByOrderId(ID)).thenReturn(List.of(lineEntity));
 
-    List<Order> orders = adapter.findAll(null, null, null, null, "orderDate", "asc");
+    List<Order> orders = adapter.findAll(null, null, null, null, null, "orderDate", "asc");
 
     assertEquals(List.of(order), orders);
   }
@@ -77,11 +78,11 @@ class OrderPersistenceAdapterSortTest {
     OrderEntity entity = OrderEntity.fromDomain(order);
     OrderLineEntity lineEntity = OrderLineEntity.fromDomain(
         UUID.randomUUID(), ID, order.orderLines().getFirst());
-    when(orderRepository.search(any(), any(), any(), any(), any(Sort.class)))
+    when(orderRepository.search(any(), any(), any(), any(), any(), any(Sort.class)))
         .thenReturn(List.of(entity));
     when(orderLineRepository.findByOrderId(ID)).thenReturn(List.of(lineEntity));
 
-    List<Order> orders = adapter.findAll(null, null, null, null, "UNKNOWN_FIELD", "desc");
+    List<Order> orders = adapter.findAll(null, null, null, null, null, "UNKNOWN_FIELD", "desc");
 
     assertEquals(List.of(order), orders);
   }
@@ -89,10 +90,10 @@ class OrderPersistenceAdapterSortTest {
   @Test
   void findAllPassesCorrectSortToRepository() {
     ArgumentCaptor<Sort> captor = ArgumentCaptor.forClass(Sort.class);
-    when(orderRepository.search(any(), any(), any(), any(), captor.capture()))
+    when(orderRepository.search(any(), any(), any(), any(), any(), captor.capture()))
         .thenReturn(List.of());
 
-    adapter.findAll(null, null, null, null, "status", "desc");
+    adapter.findAll(null, null, null, null, null, "status", "desc");
 
     assertEquals("status", captor.getValue().getOrderBy().getFirst().getProperty());
   }
@@ -100,10 +101,10 @@ class OrderPersistenceAdapterSortTest {
   @Test
   void findAllPassesOrderDatePropertyWhenSortFieldIsUnknown() {
     ArgumentCaptor<Sort> captor = ArgumentCaptor.forClass(Sort.class);
-    when(orderRepository.search(any(), any(), any(), any(), captor.capture()))
+    when(orderRepository.search(any(), any(), any(), any(), any(), captor.capture()))
         .thenReturn(List.of());
 
-    adapter.findAll(null, null, null, null, "other", "asc");
+    adapter.findAll(null, null, null, null, null, "other", "asc");
 
     assertEquals("orderDate", captor.getValue().getOrderBy().getFirst().getProperty());
   }
@@ -111,10 +112,10 @@ class OrderPersistenceAdapterSortTest {
   @Test
   void findAllPassesStatusStringToRepository() {
     ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-    when(orderRepository.search(captor.capture(), any(), any(), any(), any(Sort.class)))
+    when(orderRepository.search(any(), captor.capture(), any(), any(), any(), any(Sort.class)))
         .thenReturn(List.of());
 
-    adapter.findAll(OrderStatus.PAID, null, null, null, null, null);
+    adapter.findAll(null, OrderStatus.PAID, null, null, null, null, null);
 
     assertEquals("PAID", captor.getValue());
   }
@@ -127,7 +128,7 @@ class OrderPersistenceAdapterSortTest {
         "12345", "Country");
     OrderLine line = new OrderLine(PROD_ID, 2, 2_500);
     return new Order(
-        ID, "John Doe", "john@example.com", NOW, OrderStatus.PENDING, 5_000, "EUR",
+        ID, USER_ID, "John Doe", "john@example.com", NOW, OrderStatus.PENDING, 5_000, "EUR",
         delivery, invoice, List.of(line), NOW, NOW);
   }
 }

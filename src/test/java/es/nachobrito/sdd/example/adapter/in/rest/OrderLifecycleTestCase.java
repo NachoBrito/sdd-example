@@ -14,12 +14,14 @@ class OrderLifecycleTestCase {
 
   @Test
   void createOrderReturnsCreatedStatus(RequestSpecification spec) {
-    UUID productId = createProduct(spec);
+    String token = loginAsAdmin(spec);
+    UUID productId = createProduct(spec, token);
     UUID orderId = UUID.randomUUID();
     String payload = createOrderPayload(orderId, productId, "PENDING", "alice@example.com");
 
     int status = given(spec)
         .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
         .body(payload)
         .when()
         .post("/v1/orders")
@@ -32,12 +34,14 @@ class OrderLifecycleTestCase {
 
   @Test
   void retrieveOrderReturnsOkStatus(RequestSpecification spec) {
-    UUID productId = createProduct(spec);
+    String token = loginAsAdmin(spec);
+    UUID productId = createProduct(spec, token);
     UUID orderId = UUID.randomUUID();
     String payload = createOrderPayload(orderId, productId, "PENDING", "bob@example.com");
 
     given(spec)
         .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
         .body(payload)
         .when()
         .post("/v1/orders")
@@ -45,6 +49,7 @@ class OrderLifecycleTestCase {
         .statusCode(201);
 
     int status = given(spec)
+        .header("Authorization", "Bearer " + token)
         .when()
         .get("/v1/orders/" + orderId)
         .then()
@@ -56,12 +61,14 @@ class OrderLifecycleTestCase {
 
   @Test
   void updateOrderReturnsOkStatus(RequestSpecification spec) {
-    UUID productId = createProduct(spec);
+    String token = loginAsAdmin(spec);
+    UUID productId = createProduct(spec, token);
     UUID orderId = UUID.randomUUID();
     String payload = createOrderPayload(orderId, productId, "PENDING", "charlie@example.com");
 
     given(spec)
         .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
         .body(payload)
         .when()
         .post("/v1/orders")
@@ -72,6 +79,7 @@ class OrderLifecycleTestCase {
 
     int status = given(spec)
         .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
         .body(updatePayload)
         .when()
         .put("/v1/orders/" + orderId)
@@ -84,12 +92,14 @@ class OrderLifecycleTestCase {
 
   @Test
   void deletePendingOrderReturnsNoContentStatus(RequestSpecification spec) {
-    UUID productId = createProduct(spec);
+    String token = loginAsAdmin(spec);
+    UUID productId = createProduct(spec, token);
     UUID orderId = UUID.randomUUID();
     String payload = createOrderPayload(orderId, productId, "PENDING", "dana@example.com");
 
     given(spec)
         .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
         .body(payload)
         .when()
         .post("/v1/orders")
@@ -97,6 +107,7 @@ class OrderLifecycleTestCase {
         .statusCode(201);
 
     int status = given(spec)
+        .header("Authorization", "Bearer " + token)
         .when()
         .delete("/v1/orders/" + orderId)
         .then()
@@ -108,12 +119,14 @@ class OrderLifecycleTestCase {
 
   @Test
   void deletePaidOrderReturnsConflictStatus(RequestSpecification spec) {
-    UUID productId = createProduct(spec);
+    String token = loginAsAdmin(spec);
+    UUID productId = createProduct(spec, token);
     UUID orderId = UUID.randomUUID();
     String payload = createOrderPayload(orderId, productId, "PAID", "elena@example.com");
 
     given(spec)
         .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
         .body(payload)
         .when()
         .post("/v1/orders")
@@ -121,6 +134,7 @@ class OrderLifecycleTestCase {
         .statusCode(201);
 
     int status = given(spec)
+        .header("Authorization", "Bearer " + token)
         .when()
         .delete("/v1/orders/" + orderId)
         .then()
@@ -132,12 +146,14 @@ class OrderLifecycleTestCase {
 
   @Test
   void getDeletedOrderReturnsNotFoundStatus(RequestSpecification spec) {
-    UUID productId = createProduct(spec);
+    String token = loginAsAdmin(spec);
+    UUID productId = createProduct(spec, token);
     UUID orderId = UUID.randomUUID();
     String payload = createOrderPayload(orderId, productId, "CANCELLED", "frank@example.com");
 
     given(spec)
         .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
         .body(payload)
         .when()
         .post("/v1/orders")
@@ -145,12 +161,14 @@ class OrderLifecycleTestCase {
         .statusCode(201);
 
     given(spec)
+        .header("Authorization", "Bearer " + token)
         .when()
         .delete("/v1/orders/" + orderId)
         .then()
         .statusCode(204);
 
     int status = given(spec)
+        .header("Authorization", "Bearer " + token)
         .when()
         .get("/v1/orders/" + orderId)
         .then()
@@ -160,7 +178,19 @@ class OrderLifecycleTestCase {
     assertEquals(404, status);
   }
 
-  private static UUID createProduct(RequestSpecification spec) {
+  private static String loginAsAdmin(RequestSpecification spec) {
+    return given(spec)
+        .contentType(ContentType.JSON)
+        .body("{\"username\":\"admin\",\"password\":\"admin1234\"}")
+        .when()
+        .post("/v1/auth/login")
+        .then()
+        .statusCode(200)
+        .extract()
+        .path("accessToken");
+  }
+
+  private static UUID createProduct(RequestSpecification spec, String token) {
     UUID productId = UUID.randomUUID();
     String skuSuffix = productId.toString().substring(0, 8);
     String createPayload = "{"
@@ -175,6 +205,7 @@ class OrderLifecycleTestCase {
 
     given(spec)
         .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
         .body(createPayload)
         .when()
         .post("/v1/products")

@@ -52,6 +52,7 @@ class SmtpNotificationTransportTest {
     OrderLine line = new OrderLine(UUID.randomUUID(), 1, 2000, 2000);
     Order order = new Order(
         UUID.randomUUID(),
+        UUID.randomUUID(),
         "Diana",
         "diana@example.com",
         Instant.now(),

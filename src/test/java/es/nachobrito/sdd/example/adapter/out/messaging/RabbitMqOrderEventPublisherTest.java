@@ -38,6 +38,7 @@ class RabbitMqOrderEventPublisherTest {
 
     order = new Order(
         UUID.randomUUID(),
+        UUID.randomUUID(),
         "Bob",
         "bob@example.com",
         Instant.now(),

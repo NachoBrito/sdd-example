@@ -19,7 +19,7 @@ Usage: ./load-tests/run.sh [OPTIONS]
 Runs load testing and performance validation scenarios against the SDD example service.
 
 Options:
-  -s, --scenario SCENARIO   Scenario to run: products, orders, mixed, stability (default: mixed)
+  -s, --scenario SCENARIO   Scenario to run: auth, products, orders, mixed, stability (default: mixed)
   -u, --users VUS           Number of concurrent virtual users (default: 10)
   -d, --duration DURATION   Active test duration, e.g. 30s, 1m, 5m (default: 30s)
   -r, --ramp-up DURATION    Ramp-up duration, e.g. 5s, 15s (default: 5s)

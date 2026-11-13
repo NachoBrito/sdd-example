@@ -1,0 +1,83 @@
+### Authentication API Requests
+# Use this file to test auth endpoints in IntelliJ IDEA or VS Code REST Client.
+
+@host = http://localhost:8080
+@userId = 77777777-7777-7777-7777-777777777777
+@username = jane.customer
+
+### 1. Register Customer User (201 Created)
+POST {{host}}/v1/auth/register
+Content-Type: application/json
+
+{
+  "userId": "{{userId}}",
+  "username": "{{username}}",
+  "password": "CustomerPass123!"
+}
+
+### 2. Login as Customer (200 OK)
+POST {{host}}/v1/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{username}}",
+  "password": "CustomerPass123!"
+}
+
+> {%
+  client.global.set("customerAccessToken", response.body.accessToken);
+  client.global.set("customerRefreshToken", response.body.refreshToken);
+%}
+
+### 3. Login as Seeded Catalog User (200 OK)
+POST {{host}}/v1/auth/login
+Content-Type: application/json
+
+{
+  "username": "catalog",
+  "password": "catalog1234"
+}
+
+> {%
+  client.global.set("catalogAccessToken", response.body.accessToken);
+%}
+
+### 4. Login as Seeded Admin User (200 OK)
+POST {{host}}/v1/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin1234"
+}
+
+> {%
+  client.global.set("adminAccessToken", response.body.accessToken);
+%}
+
+### 5. Validate Access Token (200 OK)
+POST {{host}}/v1/auth/validate
+Authorization: Bearer {{customerAccessToken}}
+Content-Type: application/json
+
+{}
+
+### 6. Refresh JWT Token Pair (200 OK)
+POST {{host}}/v1/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{customerRefreshToken}}"
+}
+
+> {%
+  client.global.set("refreshedAccessToken", response.body.accessToken);
+%}
+
+### 7. Revoke Access Token (204 No Content)
+POST {{host}}/v1/auth/revoke
+Authorization: Bearer {{refreshedAccessToken}}
+Content-Type: application/json
+
+{}
+

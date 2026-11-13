@@ -41,6 +41,7 @@ class OrderServiceDeleteTest {
   private Instant now;
 
   private static final UUID ORDER_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
+  private static final UUID USER_ID = UUID.fromString("33333333-3333-3333-3333-333333333333");
   private static final UUID PRODUCT_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
 
   private static DeliveryAddress sampleDelivery() {
@@ -68,9 +69,9 @@ class OrderServiceDeleteTest {
 
   @Test
   void deleteOrderThrowsConflictWhenPaid() {
-    Order order = Order.create(
-        ORDER_ID, "John Doe", "john@example.com", now, OrderStatus.PAID, "USD",
-        sampleDelivery(), sampleInvoice(), sampleLines());
+    Order order = Order.create(new Order.OrderDraft(
+        ORDER_ID, USER_ID, "John Doe", "john@example.com", now, OrderStatus.PAID, "USD",
+        sampleDelivery(), sampleInvoice(), sampleLines()));
 
     when(repository.findById(ORDER_ID)).thenReturn(Optional.of(order));
 
@@ -79,9 +80,9 @@ class OrderServiceDeleteTest {
 
   @Test
   void deleteOrderThrowsConflictWhenShipped() {
-    Order order = Order.create(
-        ORDER_ID, "John Doe", "john@example.com", now, OrderStatus.SHIPPED, "USD",
-        sampleDelivery(), sampleInvoice(), sampleLines());
+    Order order = Order.create(new Order.OrderDraft(
+        ORDER_ID, USER_ID, "John Doe", "john@example.com", now, OrderStatus.SHIPPED, "USD",
+        sampleDelivery(), sampleInvoice(), sampleLines()));
 
     when(repository.findById(ORDER_ID)).thenReturn(Optional.of(order));
 
@@ -90,9 +91,9 @@ class OrderServiceDeleteTest {
 
   @Test
   void deleteOrderThrowsConflictWhenDelivered() {
-    Order order = Order.create(
-        ORDER_ID, "John Doe", "john@example.com", now, OrderStatus.DELIVERED, "USD",
-        sampleDelivery(), sampleInvoice(), sampleLines());
+    Order order = Order.create(new Order.OrderDraft(
+        ORDER_ID, USER_ID, "John Doe", "john@example.com", now, OrderStatus.DELIVERED, "USD",
+        sampleDelivery(), sampleInvoice(), sampleLines()));
 
     when(repository.findById(ORDER_ID)).thenReturn(Optional.of(order));
 
@@ -101,9 +102,9 @@ class OrderServiceDeleteTest {
 
   @Test
   void deleteOrderDeletesPendingOrder() {
-    Order order = Order.create(
-        ORDER_ID, "John Doe", "john@example.com", now, OrderStatus.PENDING, "USD",
-        sampleDelivery(), sampleInvoice(), sampleLines());
+    Order order = Order.create(new Order.OrderDraft(
+        ORDER_ID, USER_ID, "John Doe", "john@example.com", now, OrderStatus.PENDING, "USD",
+        sampleDelivery(), sampleInvoice(), sampleLines()));
 
     when(repository.findById(ORDER_ID)).thenReturn(Optional.of(order));
 
@@ -115,9 +116,9 @@ class OrderServiceDeleteTest {
 
   @Test
   void deleteOrderDeletesCancelledOrder() {
-    Order order = Order.create(
-        ORDER_ID, "John Doe", "john@example.com", now, OrderStatus.CANCELLED, "USD",
-        sampleDelivery(), sampleInvoice(), sampleLines());
+    Order order = Order.create(new Order.OrderDraft(
+        ORDER_ID, USER_ID, "John Doe", "john@example.com", now, OrderStatus.CANCELLED, "USD",
+        sampleDelivery(), sampleInvoice(), sampleLines()));
 
     when(repository.findById(ORDER_ID)).thenReturn(Optional.of(order));
 

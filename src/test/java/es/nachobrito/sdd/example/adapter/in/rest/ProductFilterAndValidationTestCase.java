@@ -14,6 +14,7 @@ class ProductFilterAndValidationTestCase {
 
   @Test
   void rejectDuplicateIdentifierReturnsConflict(RequestSpecification spec) {
+    String token = loginAsCatalog(spec);
     UUID productId = UUID.randomUUID();
     String suffix = productId.toString().substring(0, 8);
     String payload = "{"
@@ -27,6 +28,7 @@ class ProductFilterAndValidationTestCase {
 
     given(spec)
         .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
         .body(payload)
         .when()
         .post("/v1/products")
@@ -44,6 +46,7 @@ class ProductFilterAndValidationTestCase {
 
     int duplicateStatus = given(spec)
         .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
         .body(duplicatePayload)
         .when()
         .post("/v1/products")
@@ -55,6 +58,7 @@ class ProductFilterAndValidationTestCase {
 
   @Test
   void rejectDuplicateSkuReturnsConflict(RequestSpecification spec) {
+    String token = loginAsCatalog(spec);
     String commonSku = "DUPLICATE-SKU-" + UUID.randomUUID().toString().substring(0, 8);
     UUID id1 = UUID.randomUUID();
     UUID id2 = UUID.randomUUID();
@@ -70,6 +74,7 @@ class ProductFilterAndValidationTestCase {
 
     given(spec)
         .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
         .body(payload1)
         .when()
         .post("/v1/products")
@@ -87,6 +92,7 @@ class ProductFilterAndValidationTestCase {
 
     int secondStatus = given(spec)
         .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
         .body(payload2)
         .when()
         .post("/v1/products")
@@ -98,6 +104,7 @@ class ProductFilterAndValidationTestCase {
 
   @Test
   void rejectNegativePriceReturnsBadRequest(RequestSpecification spec) {
+    String token = loginAsCatalog(spec);
     UUID id = UUID.randomUUID();
     String suffix = id.toString().substring(0, 8);
     String payload = "{"
@@ -111,6 +118,7 @@ class ProductFilterAndValidationTestCase {
 
     int status = given(spec)
         .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
         .body(payload)
         .when()
         .post("/v1/products")
@@ -122,6 +130,7 @@ class ProductFilterAndValidationTestCase {
 
   @Test
   void filterByStatusReturnsOk(RequestSpecification spec) {
+    String token = loginAsCatalog(spec);
     String prefix = UUID.randomUUID().toString().substring(0, 6);
     UUID id1 = UUID.randomUUID();
 
@@ -136,6 +145,7 @@ class ProductFilterAndValidationTestCase {
 
     given(spec)
         .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
         .body(p1)
         .when()
         .post("/v1/products")
@@ -143,6 +153,7 @@ class ProductFilterAndValidationTestCase {
         .statusCode(201);
 
     int filterStatus = given(spec)
+        .header("Authorization", "Bearer " + token)
         .queryParam("status", "ACTIVE")
         .queryParam("sku", prefix + "-MOUSE-A")
         .when()
@@ -155,6 +166,7 @@ class ProductFilterAndValidationTestCase {
 
   @Test
   void filterByNameRegexReturnsOk(RequestSpecification spec) {
+    String token = loginAsCatalog(spec);
     String prefix = UUID.randomUUID().toString().substring(0, 6);
     UUID id2 = UUID.randomUUID();
 
@@ -169,6 +181,7 @@ class ProductFilterAndValidationTestCase {
 
     given(spec)
         .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
         .body(p2)
         .when()
         .post("/v1/products")
@@ -176,6 +189,7 @@ class ProductFilterAndValidationTestCase {
         .statusCode(201);
 
     int regexStatus = given(spec)
+        .header("Authorization", "Bearer " + token)
         .queryParam("nameRegex", ".*Mouse.*")
         .queryParam("sku", prefix + "-MOUSE-B")
         .when()
@@ -184,5 +198,17 @@ class ProductFilterAndValidationTestCase {
         .extract()
         .statusCode();
     assertEquals(200, regexStatus);
+  }
+
+  private static String loginAsCatalog(RequestSpecification spec) {
+    return given(spec)
+        .contentType(ContentType.JSON)
+        .body("{\"username\":\"catalog\",\"password\":\"catalog1234\"}")
+        .when()
+        .post("/v1/auth/login")
+        .then()
+        .statusCode(200)
+        .extract()
+        .path("accessToken");
   }
 }

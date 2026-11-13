@@ -63,7 +63,7 @@ The local environment exposes the following endpoints:
 
 | Service | Host Port | Web URL | Credentials | Purpose |
 |:---|:---|:---|:---|:---|
-| **Application** | `8080` | `http://localhost:8080` | None | REST API service |
+| **Application** | `8080` | `http://localhost:8080` | Seeded: `admin`/`admin1234`, `catalog`/`catalog1234` | REST API service with JWT bearer authentication |
 | **MariaDB** | `3306` | None | `sdd` / `sdd` | Relational database storage |
 | **RabbitMQ Management** | `15672` | `http://localhost:15672` | `guest` / `guest` | Message queue management console |
 | **Mailpit Web UI** | `8025` | `http://localhost:8025` | None | Web viewer for email notifications |
@@ -77,6 +77,10 @@ The local environment exposes the following endpoints:
 ## 5. Send Example Requests
 
 The repository includes executable HTTP files with sample requests for all use cases:
+
+- `docs/running/requests/auth.http` — User registration, login, token validation, token refresh, and token revocation.
+- `docs/running/requests/products.http` — Product catalog management (requires `CATALOG` or `CUSTOMER` JWT token).
+- `docs/running/requests/orders.http` — Order lifecycle operations (requires `CUSTOMER` or `ADMIN` JWT token).
 
 - Product catalog requests: [`requests/products.http`](requests/products.http)
 - Order management requests: [`requests/orders.http`](requests/orders.http)

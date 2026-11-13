@@ -18,6 +18,7 @@ import java.util.UUID;
  * Persistence entity mapping the orders table.
  *
  * @param id the order primary key
+ * @param userId the owning user identifier
  * @param customerName the customer name
  * @param customerEmail the customer email
  * @param orderDate the order timestamp
@@ -47,6 +48,7 @@ import java.util.UUID;
 @MappedEntity("orders")
 public record OrderEntity(
     @Id @NonNull UUID id,
+    @NonNull @MappedProperty("user_id") UUID userId,
     @NonNull @MappedProperty("customer_name") String customerName,
     @NonNull @MappedProperty("customer_email") String customerEmail,
     @NonNull @MappedProperty("order_date") Instant orderDate,
@@ -103,6 +105,7 @@ public record OrderEntity(
 
     return new Order(
         this.id,
+        this.userId,
         this.customerName,
         this.customerEmail,
         this.orderDate,
@@ -128,6 +131,7 @@ public record OrderEntity(
 
     return new OrderEntity(
         domain.id(),
+        domain.userId(),
         domain.customerName(),
         domain.customerEmail(),
         domain.date(),

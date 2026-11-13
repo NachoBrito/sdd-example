@@ -9,11 +9,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Data transfer record for complete order details in order events.
  *
  * @param id the unique order identifier
+ * @param userId the owning user identifier
  * @param customerName the name of the customer
  * @param customerEmail the email address of the customer
  * @param date the order placement timestamp
@@ -27,6 +29,7 @@ import java.util.UUID;
 @Serdeable
 public record OrderPayloadDto(
     UUID id,
+    @Nullable UUID userId,
     String customerName,
     String customerEmail,
     Instant date,
@@ -37,11 +40,17 @@ public record OrderPayloadDto(
     AddressPayloadDto invoiceAddress,
     List<OrderLinePayloadDto> orderLines) {
 
+  private static final UUID LEGACY_USER_ID =
+      UUID.fromString("00000000-0000-0000-0000-000000000001");
+
   /**
    * Validates required order payload fields.
    */
   public OrderPayloadDto {
     Objects.requireNonNull(id, "Id must not be null");
+    if (userId == null) {
+      userId = LEGACY_USER_ID;
+    }
     Objects.requireNonNull(customerName, "CustomerName must not be null");
     Objects.requireNonNull(customerEmail, "CustomerEmail must not be null");
     Objects.requireNonNull(date, "Date must not be null");
@@ -76,6 +85,7 @@ public record OrderPayloadDto(
         order.orderLines().stream().map(OrderLinePayloadDto::fromDomain).toList();
     return new OrderPayloadDto(
         order.id(),
+        order.userId(),
         order.customerName(),
         order.customerEmail(),
         order.date(),
@@ -99,6 +109,7 @@ public record OrderPayloadDto(
         orderLines.stream().map(OrderLinePayloadDto::toDomain).toList();
     return new Order(
         id,
+        userId != null ? userId : LEGACY_USER_ID,
         customerName,
         customerEmail,
         date,

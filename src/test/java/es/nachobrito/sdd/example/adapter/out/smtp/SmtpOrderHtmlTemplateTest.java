@@ -55,6 +55,7 @@ class SmtpOrderHtmlTemplateTest {
 
     order = new Order(
         orderId,
+        UUID.randomUUID(),
         "John & Jane Doe",
         "john@example.com",
         Instant.parse("2026-11-11T10:00:00Z"),
@@ -134,6 +135,7 @@ class SmtpOrderHtmlTemplateTest {
     DeliveryAddress noComplementAddress = new DeliveryAddress(
         "Bob", "+123", "Street", null, "City", "State", "123", "Country");
     Order orderWithoutComplement = new Order(
+        UUID.randomUUID(),
         UUID.randomUUID(),
         "Bob",
         "bob@example.com",

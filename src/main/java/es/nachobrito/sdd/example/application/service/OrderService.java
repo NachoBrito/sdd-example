@@ -4,6 +4,8 @@ import es.nachobrito.sdd.example.application.port.in.OrderUseCase;
 import es.nachobrito.sdd.example.application.port.out.OrderEventPublisherPort;
 import es.nachobrito.sdd.example.application.port.out.OrderRepositoryPort;
 import es.nachobrito.sdd.example.application.port.out.ProductRepositoryPort;
+import es.nachobrito.sdd.example.application.security.AuthorizationPolicy;
+import es.nachobrito.sdd.example.application.security.AuthorizePolicy;
 import es.nachobrito.sdd.example.domain.model.DuplicateOrderIdentifierException;
 import es.nachobrito.sdd.example.domain.model.InvalidOrderDataException;
 import es.nachobrito.sdd.example.domain.model.Order;
@@ -65,6 +67,7 @@ public class OrderService implements OrderUseCase {
   }
 
   @Override
+  @AuthorizePolicy(AuthorizationPolicy.ORDER_CREATE)
   public Order createOrder(CreateOrderCommand command) {
     Objects.requireNonNull(command, "Command cannot be null");
     if (repository.existsById(command.id())) {
@@ -80,6 +83,7 @@ public class OrderService implements OrderUseCase {
     long total = Order.calculateTotal(command.orderLines());
     Order order = new Order(
         command.id(),
+        command.userId(),
         command.customerName(),
         command.customerEmail(),
         orderDate,
@@ -98,6 +102,7 @@ public class OrderService implements OrderUseCase {
   }
 
   @Override
+  @AuthorizePolicy(AuthorizationPolicy.ORDER_READ)
   public Order getOrder(UUID id) {
     Objects.requireNonNull(id, "Order id cannot be null");
     return repository.findById(id).orElseThrow(() -> new OrderNotFoundException(id));
@@ -146,6 +151,7 @@ public class OrderService implements OrderUseCase {
   }
 
   @Override
+  @AuthorizePolicy(AuthorizationPolicy.ORDER_LIST)
   public List<Order> listOrders(ListOrdersQuery query) {
     Objects.requireNonNull(query, "Query cannot be null");
     Instant start = query.startDate();
@@ -155,6 +161,7 @@ public class OrderService implements OrderUseCase {
     }
 
     return repository.findAll(
+        query.userId(),
         query.status(),
         query.customerEmail(),
         start,

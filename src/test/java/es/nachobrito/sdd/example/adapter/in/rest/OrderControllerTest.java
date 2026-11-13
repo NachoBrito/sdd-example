@@ -11,10 +11,7 @@ import es.nachobrito.sdd.example.adapter.in.rest.dto.InvoiceAddressDto;
 import es.nachobrito.sdd.example.adapter.in.rest.dto.OrderLineRequest;
 import es.nachobrito.sdd.example.adapter.in.rest.dto.OrderResponse;
 import es.nachobrito.sdd.example.adapter.in.rest.dto.UpdateOrderRequest;
-import es.nachobrito.sdd.example.application.port.in.CreateOrderUseCase.CreateOrderCommand;
-import es.nachobrito.sdd.example.application.port.in.ListOrdersUseCase.ListOrdersQuery;
 import es.nachobrito.sdd.example.application.port.in.OrderUseCase;
-import es.nachobrito.sdd.example.application.port.in.UpdateOrderUseCase.UpdateOrderCommand;
 import es.nachobrito.sdd.example.domain.model.DeliveryAddress;
 import es.nachobrito.sdd.example.domain.model.InvoiceAddress;
 import es.nachobrito.sdd.example.domain.model.Order;
@@ -40,6 +37,7 @@ class OrderControllerTest {
   private OrderController controller;
 
   private static final UUID ORDER_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
+  private static final UUID USER_ID = UUID.fromString("33333333-3333-3333-3333-333333333333");
   private static final UUID PRODUCT_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
   private static final Instant NOW = Instant.parse("2026-11-10T12:00:00Z");
   private static final DeliveryAddressDto DELIVERY_DTO = new DeliveryAddressDto(
@@ -50,9 +48,9 @@ class OrderControllerTest {
       "Chicago", "IL", "60601", "USA");
   private static final DeliveryAddress DELIVERY = DELIVERY_DTO.toDomain();
   private static final InvoiceAddress INVOICE = INVOICE_DTO.toDomain();
-  private static final Order SAMPLE_ORDER = Order.create(
-      ORDER_ID, "John Doe", "john@example.com", NOW, OrderStatus.PENDING, "USD",
-      DELIVERY, INVOICE, List.of(new OrderLine(PRODUCT_ID, 2, 5_000)));
+  private static final Order SAMPLE_ORDER = Order.create(new Order.OrderDraft(
+      ORDER_ID, USER_ID, "John Doe", "john@example.com", NOW, OrderStatus.PENDING, "USD",
+      DELIVERY, INVOICE, List.of(new OrderLine(PRODUCT_ID, 2, 5_000))));
 
   @BeforeEach
   void setUp() {
@@ -66,7 +64,7 @@ class OrderControllerTest {
         DELIVERY_DTO, INVOICE_DTO,
         List.of(new OrderLineRequest(PRODUCT_ID, 2, 5_000, 10_000L)));
 
-    when(orderUseCase.createOrder(any(CreateOrderCommand.class))).thenReturn(SAMPLE_ORDER);
+    when(orderUseCase.createOrder(any())).thenReturn(SAMPLE_ORDER);
 
     HttpResponse<OrderResponse> response = controller.create(request);
 
@@ -89,11 +87,11 @@ class OrderControllerTest {
         DELIVERY_DTO, INVOICE_DTO,
         List.of(new OrderLineRequest(PRODUCT_ID, 3, 5_000, 15_000L)));
 
-    Order updated = Order.create(
-        ORDER_ID, "Jane Doe", "jane@example.com", NOW, OrderStatus.PAID, "USD",
-        DELIVERY, INVOICE, List.of(new OrderLine(PRODUCT_ID, 3, 5_000)));
+    Order updated = Order.create(new Order.OrderDraft(
+        ORDER_ID, USER_ID, "Jane Doe", "jane@example.com", NOW, OrderStatus.PAID, "USD",
+        DELIVERY, INVOICE, List.of(new OrderLine(PRODUCT_ID, 3, 5_000))));
 
-    when(orderUseCase.updateOrder(any(UpdateOrderCommand.class))).thenReturn(updated);
+    when(orderUseCase.updateOrder(any())).thenReturn(updated);
 
     OrderResponse response = controller.update(ORDER_ID, request);
 
@@ -116,9 +114,10 @@ class OrderControllerTest {
 
   @Test
   void listReturnsListOfOrderResponses() {
-    when(orderUseCase.listOrders(any(ListOrdersQuery.class))).thenReturn(List.of(SAMPLE_ORDER));
+    when(orderUseCase.listOrders(any())).thenReturn(List.of(SAMPLE_ORDER));
 
-    List<OrderResponse> responses = controller.list(null, null, null, null, "date", "asc");
+    List<OrderResponse> responses =
+        controller.list(null, null, null, null, "date", "asc");
 
     assertEquals(1, responses.size());
   }

@@ -1,8 +1,10 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
-import { createProductPayload } from '../helpers/payloads.js';
+import { authHeaders, createProductPayload, login } from '../helpers/payloads.js';
 
 const TARGET_URL = __ENV.TARGET_URL || 'http://localhost:8080';
+const CATALOG_USER = __ENV.CATALOG_USER || 'catalog';
+const CATALOG_PASS = __ENV.CATALOG_PASS || 'catalog1234';
 
 export const options = {
   thresholds: {
@@ -11,16 +13,18 @@ export const options = {
   },
 };
 
-const JSON_HEADERS = {
-  'Content-Type': 'application/json',
-  Accept: 'application/json',
-};
+export function setup() {
+  const tokens = login(TARGET_URL, CATALOG_USER, CATALOG_PASS);
+  return { token: tokens.accessToken };
+}
 
-export default function () {
+export default function (data) {
+  const headers = authHeaders(data.token);
+
   // 1. Browse active products catalog (50% weight)
   const listRes = http.get(
     `${TARGET_URL}/v1/products?limit=10&offset=0&status=ACTIVE`,
-    { headers: { Accept: 'application/json' } }
+    { headers: headers }
   );
 
   check(listRes, {
@@ -47,7 +51,7 @@ export default function () {
   if (knownProductId && Math.random() < 0.5) {
     const getRes = http.get(
       `${TARGET_URL}/v1/products/${knownProductId}`,
-      { headers: { Accept: 'application/json' } }
+      { headers: headers }
     );
 
     check(getRes, {
@@ -63,7 +67,7 @@ export default function () {
     const postRes = http.post(
       `${TARGET_URL}/v1/products`,
       payload,
-      { headers: JSON_HEADERS }
+      { headers: headers }
     );
 
     check(postRes, {

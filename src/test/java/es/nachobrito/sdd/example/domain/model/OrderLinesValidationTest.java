@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 class OrderLinesValidationTest {
 
   private static final UUID ORDER_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
+  private static final UUID USER_ID = UUID.fromString("33333333-3333-3333-3333-333333333333");
   private static final UUID PRODUCT_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
   private static final Instant NOW = Instant.parse("2026-11-10T12:00:00Z");
   private static final DeliveryAddress DELIVERY = new DeliveryAddress(
@@ -25,36 +26,36 @@ class OrderLinesValidationTest {
   void blankCurrencyThrowsException() {
     assertThrows(
         InvalidOrderDataException.class,
-        () -> Order.create(
-            ORDER_ID, "John", "john@example.com", NOW, OrderStatus.PENDING, "   ",
-            DELIVERY, INVOICE, LINES));
+        () -> Order.create(new Order.OrderDraft(
+            ORDER_ID, USER_ID, "John", "john@example.com", NOW, OrderStatus.PENDING, "   ",
+            DELIVERY, INVOICE, LINES)));
   }
 
   @Test
   void nullDeliveryAddressThrowsException() {
     assertThrows(
         InvalidOrderDataException.class,
-        () -> Order.create(
-            ORDER_ID, "John", "john@example.com", NOW, OrderStatus.PENDING, "USD",
-            null, INVOICE, LINES));
+        () -> Order.create(new Order.OrderDraft(
+            ORDER_ID, USER_ID, "John", "john@example.com", NOW, OrderStatus.PENDING, "USD",
+            null, INVOICE, LINES)));
   }
 
   @Test
   void nullInvoiceAddressThrowsException() {
     assertThrows(
         InvalidOrderDataException.class,
-        () -> Order.create(
-            ORDER_ID, "John", "john@example.com", NOW, OrderStatus.PENDING, "USD",
-            DELIVERY, null, LINES));
+        () -> Order.create(new Order.OrderDraft(
+            ORDER_ID, USER_ID, "John", "john@example.com", NOW, OrderStatus.PENDING, "USD",
+            DELIVERY, null, LINES)));
   }
 
   @Test
   void emptyLinesThrowsException() {
     assertThrows(
         InvalidOrderDataException.class,
-        () -> Order.create(
-            ORDER_ID, "John", "john@example.com", NOW, OrderStatus.PENDING, "USD",
-            DELIVERY, INVOICE, List.of()));
+        () -> Order.create(new Order.OrderDraft(
+            ORDER_ID, USER_ID, "John", "john@example.com", NOW, OrderStatus.PENDING, "USD",
+            DELIVERY, INVOICE, List.of())));
   }
 
   @Test

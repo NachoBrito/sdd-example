@@ -16,12 +16,14 @@ class OrderFilterAndValidationTestCase {
 
   @Test
   void rejectDuplicateIdentifierReturnsConflict(RequestSpecification spec) {
-    UUID productId = createProduct(spec);
+    String token = loginAsAdmin(spec);
+    UUID productId = createProduct(spec, token);
     UUID orderId = UUID.randomUUID();
     String payload = sampleOrderPayload(orderId, productId, "user1@example.com", 2, 1000);
 
     given(spec)
         .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
         .body(payload)
         .when()
         .post(ORDERS_PATH)
@@ -30,6 +32,7 @@ class OrderFilterAndValidationTestCase {
 
     int duplicateStatus = given(spec)
         .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
         .body(payload)
         .when()
         .post(ORDERS_PATH)
@@ -42,12 +45,14 @@ class OrderFilterAndValidationTestCase {
 
   @Test
   void rejectInvalidEmailReturnsBadRequest(RequestSpecification spec) {
+    String token = loginAsAdmin(spec);
     UUID orderId = UUID.randomUUID();
     UUID productId = UUID.randomUUID();
     String payload = sampleOrderPayload(orderId, productId, "not-an-email", 1, 1000);
 
     int status = given(spec)
         .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
         .body(payload)
         .when()
         .post(ORDERS_PATH)
@@ -60,12 +65,14 @@ class OrderFilterAndValidationTestCase {
 
   @Test
   void rejectNegativePriceReturnsBadRequest(RequestSpecification spec) {
+    String token = loginAsAdmin(spec);
     UUID orderId = UUID.randomUUID();
     UUID productId = UUID.randomUUID();
     String payload = sampleOrderPayload(orderId, productId, "valid@example.com", 1, -500);
 
     int status = given(spec)
         .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
         .body(payload)
         .when()
         .post(ORDERS_PATH)
@@ -78,12 +85,14 @@ class OrderFilterAndValidationTestCase {
 
   @Test
   void rejectZeroQuantityReturnsBadRequest(RequestSpecification spec) {
+    String token = loginAsAdmin(spec);
     UUID orderId = UUID.randomUUID();
     UUID productId = UUID.randomUUID();
     String payload = sampleOrderPayload(orderId, productId, "valid@example.com", 0, 500);
 
     int status = given(spec)
         .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
         .body(payload)
         .when()
         .post(ORDERS_PATH)
@@ -96,6 +105,7 @@ class OrderFilterAndValidationTestCase {
 
   @Test
   void rejectUnexistingProductReturnsBadRequest(RequestSpecification spec) {
+    String token = loginAsAdmin(spec);
     UUID orderId = UUID.randomUUID();
     UUID unexistingProductId = UUID.randomUUID();
     String payload =
@@ -103,6 +113,7 @@ class OrderFilterAndValidationTestCase {
 
     int status = given(spec)
         .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
         .body(payload)
         .when()
         .post(ORDERS_PATH)
@@ -115,12 +126,14 @@ class OrderFilterAndValidationTestCase {
 
   @Test
   void filterOrdersByStatusReturnsOk(RequestSpecification spec) {
-    UUID productId = createProduct(spec);
+    String token = loginAsAdmin(spec);
+    UUID productId = createProduct(spec, token);
     UUID orderId = UUID.randomUUID();
     String payload = sampleOrderPayload(orderId, productId, "filter-status@example.com", 1, 1000);
 
     given(spec)
         .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
         .body(payload)
         .when()
         .post(ORDERS_PATH)
@@ -128,6 +141,7 @@ class OrderFilterAndValidationTestCase {
         .statusCode(201);
 
     int status = given(spec)
+        .header("Authorization", "Bearer " + token)
         .queryParam("status", "PENDING")
         .when()
         .get(ORDERS_PATH)
@@ -140,13 +154,15 @@ class OrderFilterAndValidationTestCase {
 
   @Test
   void filterOrdersByEmailAndSortReturnsOk(RequestSpecification spec) {
-    UUID productId = createProduct(spec);
+    String token = loginAsAdmin(spec);
+    UUID productId = createProduct(spec, token);
     UUID orderId = UUID.randomUUID();
     String email = "sort-test-" + orderId.toString().substring(0, 8) + "@example.com";
     String payload = sampleOrderPayload(orderId, productId, email, 1, 1000);
 
     given(spec)
         .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
         .body(payload)
         .when()
         .post(ORDERS_PATH)
@@ -154,6 +170,7 @@ class OrderFilterAndValidationTestCase {
         .statusCode(201);
 
     int status = given(spec)
+        .header("Authorization", "Bearer " + token)
         .queryParam("customerEmail", email)
         .queryParam("sort", "date")
         .queryParam("direction", "desc")
@@ -166,7 +183,19 @@ class OrderFilterAndValidationTestCase {
     assertEquals(200, status);
   }
 
-  private static UUID createProduct(RequestSpecification spec) {
+  private static String loginAsAdmin(RequestSpecification spec) {
+    return given(spec)
+        .contentType(ContentType.JSON)
+        .body("{\"username\":\"admin\",\"password\":\"admin1234\"}")
+        .when()
+        .post("/v1/auth/login")
+        .then()
+        .statusCode(200)
+        .extract()
+        .path("accessToken");
+  }
+
+  private static UUID createProduct(RequestSpecification spec, String token) {
     UUID productId = UUID.randomUUID();
     String skuSuffix = productId.toString().substring(0, 8);
     String createPayload = "{"
@@ -181,6 +210,7 @@ class OrderFilterAndValidationTestCase {
 
     given(spec)
         .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
         .body(createPayload)
         .when()
         .post("/v1/products")

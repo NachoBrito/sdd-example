@@ -83,6 +83,7 @@ public class OrderPersistenceAdapter implements OrderRepositoryPort {
   @Override
   @Transactional(readOnly = true)
   public List<Order> findAll(
+      @Nullable UUID userId,
       @Nullable OrderStatus status,
       @Nullable String customerEmail,
       @Nullable Instant startDate,
@@ -91,7 +92,9 @@ public class OrderPersistenceAdapter implements OrderRepositoryPort {
       String direction) {
     Sort sort = resolveSort(sortField, direction);
     String statusStr = status == null ? null : status.name();
-    return orderRepository.search(statusStr, customerEmail, startDate, endDate, sort).stream()
+    return orderRepository
+        .search(userId, statusStr, customerEmail, startDate, endDate, sort)
+        .stream()
         .map(this::loadOrderWithLines)
         .toList();
   }

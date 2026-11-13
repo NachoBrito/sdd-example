@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 class CreateOrderRequestTest {
 
   private static final UUID ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
+  private static final UUID USER_ID = UUID.fromString("33333333-3333-3333-3333-333333333333");
   private static final UUID PROD_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
   private static final Instant NOW = Instant.parse("2026-11-10T12:00:00Z");
   private static final DeliveryAddressDto DELIVERY = new DeliveryAddressDto(
@@ -30,10 +31,11 @@ class CreateOrderRequestTest {
         ID, "John Doe", "john@example.com", NOW, OrderStatus.PENDING, 5_000L, "EUR",
         DELIVERY, INVOICE, List.of(LINE));
 
-    CreateOrderCommand command = request.toCommand();
+    CreateOrderCommand command = request.toCommand(USER_ID);
 
     assertAll(
         () -> assertEquals(ID, command.id()),
+        () -> assertEquals(USER_ID, command.userId()),
         () -> assertEquals("John Doe", command.customerName()),
         () -> assertEquals("john@example.com", command.customerEmail()),
         () -> assertEquals(NOW, command.date()),

@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 class OrderValidationTest {
 
   private static final UUID ORDER_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
+  private static final UUID USER_ID = UUID.fromString("33333333-3333-3333-3333-333333333333");
   private static final UUID PRODUCT_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
   private static final Instant NOW = Instant.parse("2026-11-10T12:00:00Z");
   private static final DeliveryAddress DELIVERY = new DeliveryAddress(
@@ -25,18 +26,18 @@ class OrderValidationTest {
   void nullIdThrowsException() {
     assertThrows(
         InvalidOrderDataException.class,
-        () -> Order.create(
-            null, "John", "john@example.com", NOW, OrderStatus.PENDING, "USD",
-            DELIVERY, INVOICE, LINES));
+        () -> Order.create(new Order.OrderDraft(
+            null, USER_ID, "John", "john@example.com", NOW, OrderStatus.PENDING, "USD",
+            DELIVERY, INVOICE, LINES)));
   }
 
   @Test
   void blankCustomerNameThrowsException() {
     assertThrows(
         InvalidOrderDataException.class,
-        () -> Order.create(
-            ORDER_ID, "   ", "john@example.com", NOW, OrderStatus.PENDING, "USD",
-            DELIVERY, INVOICE, LINES));
+        () -> Order.create(new Order.OrderDraft(
+            ORDER_ID, USER_ID, "   ", "john@example.com", NOW, OrderStatus.PENDING, "USD",
+            DELIVERY, INVOICE, LINES)));
   }
 
   @Test
@@ -44,17 +45,17 @@ class OrderValidationTest {
     String longName = "A".repeat(256);
     assertThrows(
         InvalidOrderDataException.class,
-        () -> Order.create(
-            ORDER_ID, longName, "john@example.com", NOW, OrderStatus.PENDING, "USD",
-            DELIVERY, INVOICE, LINES));
+        () -> Order.create(new Order.OrderDraft(
+            ORDER_ID, USER_ID, longName, "john@example.com", NOW, OrderStatus.PENDING, "USD",
+            DELIVERY, INVOICE, LINES)));
   }
 
   @Test
   void exactMaxLengthCustomerNameIsValid() {
     String maxName = "A".repeat(255);
-    Order order = Order.create(
-        ORDER_ID, maxName, "john@example.com", NOW, OrderStatus.PENDING, "USD",
-        DELIVERY, INVOICE, LINES);
+    Order order = Order.create(new Order.OrderDraft(
+        ORDER_ID, USER_ID, maxName, "john@example.com", NOW, OrderStatus.PENDING, "USD",
+        DELIVERY, INVOICE, LINES));
     assertEquals(maxName, order.customerName());
   }
 
@@ -62,18 +63,18 @@ class OrderValidationTest {
   void invalidEmailThrowsException() {
     assertThrows(
         InvalidOrderDataException.class,
-        () -> Order.create(
-            ORDER_ID, "John", "invalid-email", NOW, OrderStatus.PENDING, "USD",
-            DELIVERY, INVOICE, LINES));
+        () -> Order.create(new Order.OrderDraft(
+            ORDER_ID, USER_ID, "John", "invalid-email", NOW, OrderStatus.PENDING, "USD",
+            DELIVERY, INVOICE, LINES)));
   }
 
   @Test
   void blankCustomerEmailThrowsException() {
     assertThrows(
         InvalidOrderDataException.class,
-        () -> Order.create(
-            ORDER_ID, "John", "   ", NOW, OrderStatus.PENDING, "USD",
-            DELIVERY, INVOICE, LINES));
+        () -> Order.create(new Order.OrderDraft(
+            ORDER_ID, USER_ID, "John", "   ", NOW, OrderStatus.PENDING, "USD",
+            DELIVERY, INVOICE, LINES)));
   }
 
   @Test
@@ -81,26 +82,26 @@ class OrderValidationTest {
     String longEmail = "a".repeat(245) + "@example.com";
     assertThrows(
         InvalidOrderDataException.class,
-        () -> Order.create(
-            ORDER_ID, "John", longEmail, NOW, OrderStatus.PENDING, "USD",
-            DELIVERY, INVOICE, LINES));
+        () -> Order.create(new Order.OrderDraft(
+            ORDER_ID, USER_ID, "John", longEmail, NOW, OrderStatus.PENDING, "USD",
+            DELIVERY, INVOICE, LINES)));
   }
 
   @Test
   void nullDateThrowsException() {
     assertThrows(
         InvalidOrderDataException.class,
-        () -> Order.create(
-            ORDER_ID, "John", "john@example.com", null, OrderStatus.PENDING, "USD",
-            DELIVERY, INVOICE, LINES));
+        () -> Order.create(new Order.OrderDraft(
+            ORDER_ID, USER_ID, "John", "john@example.com", null, OrderStatus.PENDING, "USD",
+            DELIVERY, INVOICE, LINES)));
   }
 
   @Test
   void nullStatusThrowsException() {
     assertThrows(
         InvalidOrderDataException.class,
-        () -> Order.create(
-            ORDER_ID, "John", "john@example.com", NOW, null, "USD",
-            DELIVERY, INVOICE, LINES));
+        () -> Order.create(new Order.OrderDraft(
+            ORDER_ID, USER_ID, "John", "john@example.com", NOW, null, "USD",
+            DELIVERY, INVOICE, LINES)));
   }
 }

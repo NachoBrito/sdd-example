@@ -51,6 +51,7 @@ dependencies {
     annotationProcessor(libs.micronaut.data.processor)
     annotationProcessor(libs.micronaut.openapi)
     annotationProcessor(libs.micronaut.sourcegen.generator.java)
+    annotationProcessor(libs.micronaut.security.annotations)
 
     compileOnly(libs.micronaut.openapi.annotations)
     compileOnly(libs.micronaut.sourcegen.annotations)
@@ -62,6 +63,7 @@ dependencies {
     implementation(libs.micronaut.jdbc.hikari)
     implementation(libs.micronaut.liquibase)
     implementation(libs.micronaut.rabbitmq)
+    implementation(libs.micronaut.security.jwt)
     implementation(libs.micronaut.micrometer.core)
     implementation(libs.micronaut.micrometer.observation.http)
     implementation(libs.micronaut.micrometer.registry.otlp)

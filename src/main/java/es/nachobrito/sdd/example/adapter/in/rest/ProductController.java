@@ -18,6 +18,7 @@ import io.micronaut.http.annotation.PathVariable;
 import io.micronaut.http.annotation.Post;
 import io.micronaut.http.annotation.Put;
 import io.micronaut.http.annotation.QueryValue;
+import io.micronaut.security.annotation.Secured;
 import io.micronaut.validation.Validated;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -54,6 +55,7 @@ public class ProductController {
    * @return 201 Created with the product and Location header
    */
   @Post
+  @Secured({"CATALOG"})
   @Operation(
       summary = "Create product",
       description = "Creates a product with client-generated identifier")
@@ -82,6 +84,7 @@ public class ProductController {
    * @return 200 OK with product details
    */
   @Get("/{id}")
+  @Secured({"CUSTOMER", "CATALOG"})
   @Operation(summary = "Get product", description = "Retrieves a product by identifier")
   @ApiResponse(responseCode = "200", description = "Product found")
   @ApiResponse(responseCode = "404", description = "Product not found")
@@ -98,6 +101,7 @@ public class ProductController {
    * @return 200 OK with updated product
    */
   @Put("/{id}")
+  @Secured({"CATALOG"})
   @Operation(
       summary = "Update product",
       description = "Updates an existing product by identifier")
@@ -128,6 +132,7 @@ public class ProductController {
    * @return 204 No Content
    */
   @Delete("/{id}")
+  @Secured({"CATALOG"})
   @Operation(
       summary = "Delete product",
       description = "Permanently deletes a product by identifier")
@@ -149,6 +154,7 @@ public class ProductController {
    * @return list of matching products
    */
   @Get
+  @Secured({"CUSTOMER", "CATALOG"})
   @Operation(
       summary = "List products",
       description = "Lists products with filtering and sorting")

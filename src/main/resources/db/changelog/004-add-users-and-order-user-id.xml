@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="004-create-users-and-auth-tokens" author="antigravity">
+        <createTable tableName="users">
+            <column name="id" type="VARCHAR(36)">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_users"/>
+            </column>
+            <column name="username" type="VARCHAR(100)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uq_users_username"/>
+            </column>
+            <column name="password_hash" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP(6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP(6)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="user_roles">
+            <column name="user_id" type="VARCHAR(36)">
+                <constraints nullable="false" foreignKeyName="fk_user_roles_user" references="users(id)" deleteCascade="true"/>
+            </column>
+            <column name="role" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="user_roles" columnNames="user_id, role" constraintName="pk_user_roles"/>
+
+        <createTable tableName="auth_tokens">
+            <column name="token_id" type="VARCHAR(36)">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_auth_tokens"/>
+            </column>
+            <column name="user_id" type="VARCHAR(36)">
+                <constraints nullable="false" foreignKeyName="fk_auth_tokens_user" references="users(id)" deleteCascade="true"/>
+            </column>
+            <column name="token_type" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="issued_at" type="TIMESTAMP(6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="expires_at" type="TIMESTAMP(6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="revoked_at" type="TIMESTAMP(6)">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="auth_tokens" indexName="idx_auth_tokens_user_id">
+            <column name="user_id"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="auth_tokens"/>
+            <dropTable tableName="user_roles"/>
+            <dropTable tableName="users"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="004-add-order-user-id-expand" author="antigravity">
+        <addColumn tableName="orders">
+            <column name="user_id" type="VARCHAR(36)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <rollback>
+            <dropColumn tableName="orders" columnName="user_id"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="004-backfill-order-user-id" author="antigravity">
+        <sql>
+            UPDATE orders SET user_id = '00000000-0000-0000-0000-000000000001' WHERE user_id IS NULL;
+        </sql>
+
+        <rollback>
+            <sql>
+                UPDATE orders SET user_id = NULL WHERE user_id = '00000000-0000-0000-0000-000000000001';
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="004-add-order-user-id-contract" author="antigravity">
+        <addNotNullConstraint tableName="orders" columnName="user_id" columnDataType="VARCHAR(36)"/>
+
+        <createIndex tableName="orders" indexName="idx_orders_user_id">
+            <column name="user_id"/>
+        </createIndex>
+
+        <rollback>
+            <dropIndex tableName="orders" indexName="idx_orders_user_id"/>
+            <dropNotNullConstraint tableName="orders" columnName="user_id" columnDataType="VARCHAR(36)"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="004-seed-initial-users" author="antigravity">
+        <insert tableName="users">
+            <column name="id" value="00000000-0000-0000-0000-000000000002"/>
+            <column name="username" value="admin"/>
+            <column name="password_hash" value="pbkdf2-sha256$310000$RGnKRJXknugV/RmYRlLBFw==$DSbXgudD+kJuph981W0OMYxWlk8C10KPbzwKS/iNKRQ="/>
+            <column name="created_at" valueDate="2026-11-13T00:00:00"/>
+            <column name="updated_at" valueDate="2026-11-13T00:00:00"/>
+        </insert>
+        <insert tableName="user_roles">
+            <column name="user_id" value="00000000-0000-0000-0000-000000000002"/>
+            <column name="role" value="ADMIN"/>
+        </insert>
+        <insert tableName="user_roles">
+            <column name="user_id" value="00000000-0000-0000-0000-000000000002"/>
+            <column name="role" value="CUSTOMER"/>
+        </insert>
+        <insert tableName="user_roles">
+            <column name="user_id" value="00000000-0000-0000-0000-000000000002"/>
+            <column name="role" value="CATALOG"/>
+        </insert>
+
+        <insert tableName="users">
+            <column name="id" value="00000000-0000-0000-0000-000000000003"/>
+            <column name="username" value="catalog"/>
+            <column name="password_hash" value="pbkdf2-sha256$310000$0SD5hx+ebChcaQYxq+w1hA==$sE94X5zF08KeWWq0tqOS0UIvEWjy/0WgXYbVcEaknGM="/>
+            <column name="created_at" valueDate="2026-11-13T00:00:00"/>
+            <column name="updated_at" valueDate="2026-11-13T00:00:00"/>
+        </insert>
+        <insert tableName="user_roles">
+            <column name="user_id" value="00000000-0000-0000-0000-000000000003"/>
+            <column name="role" value="CATALOG"/>
+        </insert>
+
+        <rollback>
+            <delete tableName="user_roles">
+                <where>user_id IN ('00000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000003')</where>
+            </delete>
+            <delete tableName="users">
+                <where>id IN ('00000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000003')</where>
+            </delete>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
+

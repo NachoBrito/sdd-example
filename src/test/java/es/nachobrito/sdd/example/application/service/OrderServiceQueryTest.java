@@ -43,6 +43,7 @@ class OrderServiceQueryTest {
   private Instant now;
 
   private static final UUID ORDER_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
+  private static final UUID USER_ID = UUID.fromString("33333333-3333-3333-3333-333333333333");
   private static final UUID PRODUCT_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
 
   private static DeliveryAddress sampleDelivery() {
@@ -70,9 +71,9 @@ class OrderServiceQueryTest {
 
   @Test
   void getOrderReturnsExistingOrder() {
-    Order order = Order.create(
-        ORDER_ID, "John Doe", "john@example.com", now, OrderStatus.PENDING, "USD",
-        sampleDelivery(), sampleInvoice(), sampleLines());
+    Order order = Order.create(new Order.OrderDraft(
+        ORDER_ID, USER_ID, "John Doe", "john@example.com", now, OrderStatus.PENDING, "USD",
+        sampleDelivery(), sampleInvoice(), sampleLines()));
 
     when(repository.findById(ORDER_ID)).thenReturn(Optional.of(order));
 
@@ -92,13 +93,14 @@ class OrderServiceQueryTest {
     Instant start = Instant.parse("2026-11-01T00:00:00Z");
     Instant end = Instant.parse("2026-11-10T23:59:59Z");
     ListOrdersQuery query = new ListOrdersQuery(
-        OrderStatus.PENDING, "john@example.com", start, end, "date", "asc");
+        USER_ID, OrderStatus.PENDING, "john@example.com", start, end, "date", "asc");
 
-    Order order = Order.create(
-        ORDER_ID, "John Doe", "john@example.com", now, OrderStatus.PENDING, "USD",
-        sampleDelivery(), sampleInvoice(), sampleLines());
+    Order order = Order.create(new Order.OrderDraft(
+        ORDER_ID, USER_ID, "John Doe", "john@example.com", now, OrderStatus.PENDING, "USD",
+        sampleDelivery(), sampleInvoice(), sampleLines()));
 
-    when(repository.findAll(OrderStatus.PENDING, "john@example.com", start, end, "date", "asc"))
+    when(repository.findAll(
+            USER_ID, OrderStatus.PENDING, "john@example.com", start, end, "date", "asc"))
         .thenReturn(List.of(order));
 
     List<Order> actual = service.listOrders(query);
@@ -110,7 +112,7 @@ class OrderServiceQueryTest {
     Instant start = Instant.parse("2026-11-10T00:00:00Z");
     Instant end = Instant.parse("2026-11-01T00:00:00Z");
     ListOrdersQuery query = new ListOrdersQuery(
-        OrderStatus.PENDING, "john@example.com", start, end, "date", "asc");
+        USER_ID, OrderStatus.PENDING, "john@example.com", start, end, "date", "asc");
 
     assertThrows(InvalidOrderDataException.class, () -> service.listOrders(query));
   }
@@ -118,8 +120,8 @@ class OrderServiceQueryTest {
   @Test
   void listOrdersAllowsNullStartDateWithNonNullEndDate() {
     Instant end = Instant.parse("2026-11-10T23:59:59Z");
-    ListOrdersQuery query = new ListOrdersQuery(null, null, null, end, "date", "asc");
-    when(repository.findAll(null, null, null, end, "date", "asc")).thenReturn(List.of());
+    ListOrdersQuery query = new ListOrdersQuery(null, null, null, null, end, "date", "asc");
+    when(repository.findAll(null, null, null, null, end, "date", "asc")).thenReturn(List.of());
 
     assertEquals(List.of(), service.listOrders(query));
   }
@@ -127,8 +129,8 @@ class OrderServiceQueryTest {
   @Test
   void listOrdersAllowsNonNullStartDateWithNullEndDate() {
     Instant start = Instant.parse("2026-11-01T00:00:00Z");
-    ListOrdersQuery query = new ListOrdersQuery(null, null, start, null, "date", "asc");
-    when(repository.findAll(null, null, start, null, "date", "asc")).thenReturn(List.of());
+    ListOrdersQuery query = new ListOrdersQuery(null, null, null, start, null, "date", "asc");
+    when(repository.findAll(null, null, null, start, null, "date", "asc")).thenReturn(List.of());
 
     assertEquals(List.of(), service.listOrders(query));
   }

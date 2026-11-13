@@ -4,8 +4,22 @@
 @host = http://localhost:8080
 @productId = 11111111-1111-1111-1111-111111111111
 
+### 0. Login as Seeded Catalog User (200 OK)
+POST {{host}}/v1/auth/login
+Content-Type: application/json
+
+{
+  "username": "catalog",
+  "password": "catalog1234"
+}
+
+> {%
+  client.global.set("catalogAccessToken", response.body.accessToken);
+%}
+
 ### 1. Create Product (201 Created)
 POST {{host}}/v1/products
+Authorization: Bearer {{catalogAccessToken}}
 Content-Type: application/json
 
 {
@@ -20,10 +34,12 @@ Content-Type: application/json
 
 ### 2. Retrieve Product by Identifier (200 OK)
 GET {{host}}/v1/products/{{productId}}
+Authorization: Bearer {{catalogAccessToken}}
 Accept: application/json
 
 ### 3. Update Existing Product (200 OK)
 PUT {{host}}/v1/products/{{productId}}
+Authorization: Bearer {{catalogAccessToken}}
 Content-Type: application/json
 
 {
@@ -37,10 +53,12 @@ Content-Type: application/json
 
 ### 4. List Active Products (200 OK)
 GET {{host}}/v1/products?limit=10&offset=0&status=ACTIVE
+Authorization: Bearer {{catalogAccessToken}}
 Accept: application/json
 
 ### 5. Create Product - Validation Error (400 Bad Request)
 POST {{host}}/v1/products
+Authorization: Bearer {{catalogAccessToken}}
 Content-Type: application/json
 
 {
@@ -55,6 +73,7 @@ Content-Type: application/json
 
 ### 6. Create Product - Conflict Error (409 Conflict)
 POST {{host}}/v1/products
+Authorization: Bearer {{catalogAccessToken}}
 Content-Type: application/json
 
 {
@@ -69,8 +88,10 @@ Content-Type: application/json
 
 ### 7. Retrieve Non-Existent Product (404 Not Found)
 GET {{host}}/v1/products/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{catalogAccessToken}}
 Accept: application/json
 
 ### 8. Delete Product (204 No Content)
 DELETE {{host}}/v1/products/{{productId}}
+Authorization: Bearer {{catalogAccessToken}}
 

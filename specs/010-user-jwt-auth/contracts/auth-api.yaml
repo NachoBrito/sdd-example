@@ -1,0 +1,202 @@
+openapi: 3.0.3
+info:
+  title: Authentication and Authorization API
+  version: 1.0.0
+  description: Versioned REST endpoints for user registration, JWT login, validation, refresh, and revocation.
+paths:
+  /v1/auth/register:
+    post:
+      summary: Register a new user
+      description: Creates a new user account with the default CUSTOMER role.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '400':
+          description: Validation error
+        '409':
+          description: Duplicate userId or username
+
+  /v1/auth/login:
+    post:
+      summary: Authenticate user and issue JWT tokens
+      description: Public endpoint that exchanges username and password for access and refresh JWT tokens.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          description: Invalid credentials
+
+  /v1/auth/validate:
+    post:
+      summary: Validate a JWT token
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenValidationRequest'
+      responses:
+        '200':
+          description: Token is valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenValidationResponse'
+        '401':
+          description: Token is missing, expired, malformed, or revoked
+
+  /v1/auth/refresh:
+    post:
+      summary: Refresh a JWT token
+      description: Exchanges a valid, unrevoked refresh token for a new access and refresh token pair.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '200':
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          description: Refresh token is invalid, expired, or revoked
+
+  /v1/auth/revoke:
+    post:
+      summary: Revoke a JWT token
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RevokeTokenRequest'
+      responses:
+        '204':
+          description: Token revoked
+        '401':
+          description: Token is missing or invalid
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    RegisterRequest:
+      type: object
+      required: [userId, username, password]
+      properties:
+        userId:
+          type: string
+          format: uuid
+        username:
+          type: string
+          minLength: 1
+          maxLength: 100
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+    UserResponse:
+      type: object
+      required: [userId, username, roles, createdAt]
+      properties:
+        userId:
+          type: string
+          format: uuid
+        username:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
+            enum: [ADMIN, CUSTOMER, CATALOG]
+        createdAt:
+          type: string
+          format: date-time
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+    TokenResponse:
+      type: object
+      required: [accessToken, refreshToken, tokenType, expiresInSeconds]
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        tokenType:
+          type: string
+          example: Bearer
+        expiresInSeconds:
+          type: integer
+          format: int64
+    TokenValidationRequest:
+      type: object
+      properties:
+        token:
+          type: string
+    TokenValidationResponse:
+      type: object
+      required: [valid, userId, username, roles, expiresAt]
+      properties:
+        valid:
+          type: boolean
+        userId:
+          type: string
+          format: uuid
+        username:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
+        expiresAt:
+          type: string
+          format: date-time
+    RefreshTokenRequest:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+    RevokeTokenRequest:
+      type: object
+      properties:
+        token:
+          type: string
+

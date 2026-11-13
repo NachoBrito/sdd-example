@@ -29,6 +29,7 @@ public interface CreateOrderUseCase {
    * Command model containing attributes required to create an order.
    *
    * @param id the client-generated order identifier
+   * @param userId the owning user identifier
    * @param customerName the customer name
    * @param customerEmail the customer email
    * @param date optional order placement timestamp
@@ -40,6 +41,7 @@ public interface CreateOrderUseCase {
    */
   record CreateOrderCommand(
       UUID id,
+      UUID userId,
       String customerName,
       String customerEmail,
       @Nullable Instant date,

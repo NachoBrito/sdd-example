@@ -2,6 +2,8 @@ package es.nachobrito.sdd.example.application.service;
 
 import es.nachobrito.sdd.example.application.port.in.ProductUseCase;
 import es.nachobrito.sdd.example.application.port.out.ProductRepositoryPort;
+import es.nachobrito.sdd.example.application.security.AuthorizationPolicy;
+import es.nachobrito.sdd.example.application.security.AuthorizePolicy;
 import es.nachobrito.sdd.example.domain.model.DuplicateIdentifierException;
 import es.nachobrito.sdd.example.domain.model.DuplicateSkuException;
 import es.nachobrito.sdd.example.domain.model.InvalidProductDataException;
@@ -70,6 +72,7 @@ public class ProductService implements ProductUseCase {
   }
 
   @Override
+  @AuthorizePolicy(AuthorizationPolicy.PRODUCT_READ)
   public Product getProduct(UUID id) {
     Objects.requireNonNull(id, "Product id cannot be null");
     return repository.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
@@ -107,6 +110,7 @@ public class ProductService implements ProductUseCase {
   }
 
   @Override
+  @AuthorizePolicy(AuthorizationPolicy.PRODUCT_LIST)
   public List<Product> listProducts(ListProductsQuery query) {
     Objects.requireNonNull(query, "Query cannot be null");
     validateRegex(query.nameRegex());

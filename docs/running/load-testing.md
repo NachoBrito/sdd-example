@@ -32,14 +32,17 @@ The runner script `./load-tests/run.sh` operates in two execution modes:
 
 ## 3. Available Scenarios
 
-The suite includes four performance scenarios in `load-tests/scenarios/`:
+The suite includes five performance scenarios in `load-tests/scenarios/`:
 
 | Scenario | File | Description | Traffic Mix |
 |:---|:---|:---|:---|
+| **`auth`** | `auth.js` | JWT authentication lifecycle | Register, login, validate, refresh, revoke |
 | **`products`** | `products.js` | Product catalog throughput and latency | Browse (50%), lookup (20%), create (30%) |
 | **`orders`** | `orders.js` | Transactional order processing | Order placement (50%), lookup (30%), list (20%) |
 | **`mixed`** | `mixed.js` | Realistic end-to-end shopping journey | Browse (60%), detail (20%), add product (10%), order (10%) |
 | **`stability`** | `stability.js` | Sustained traffic for endurance validation | Continuous mixed traffic with periodic health checks |
+
+Each protected scenario (`products`, `orders`, `mixed`, `stability`) authenticates in `setup()` against `/v1/auth/login` using the seeded credentials (`CATALOG_USER`/`CATALOG_PASS` or `ADMIN_USER`/`ADMIN_PASS`) and sends the `Authorization: Bearer` header on all API requests.
 
 ---
 

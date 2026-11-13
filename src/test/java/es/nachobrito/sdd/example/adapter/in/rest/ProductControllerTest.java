@@ -98,7 +98,8 @@ class ProductControllerTest {
         ID, "SKU-1", "Product 1", "Desc 1", 1_000, "USD", ProductStatus.ACTIVE, NOW);
     when(productUseCase.listProducts(any(ListProductsQuery.class))).thenReturn(List.of(product));
 
-    List<ProductResponse> responses = controller.list(null, null, null, "name", "asc");
+    List<ProductResponse> responses =
+        controller.list(null, null, null, "name", "asc");
 
     assertEquals(1, responses.size());
   }

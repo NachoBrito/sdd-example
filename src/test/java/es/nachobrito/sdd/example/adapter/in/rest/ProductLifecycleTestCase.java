@@ -14,6 +14,7 @@ class ProductLifecycleTestCase {
 
   @Test
   void createProductReturnsCreatedStatus(RequestSpecification spec) {
+    String token = loginAsCatalog(spec);
     UUID productId = UUID.randomUUID();
     String skuSuffix = productId.toString().substring(0, 8);
     String createPayload = "{"
@@ -28,6 +29,7 @@ class ProductLifecycleTestCase {
 
     int createStatus = given(spec)
         .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
         .body(createPayload)
         .when()
         .post("/v1/products")
@@ -39,6 +41,7 @@ class ProductLifecycleTestCase {
 
   @Test
   void retrieveProductReturnsOkStatus(RequestSpecification spec) {
+    String token = loginAsCatalog(spec);
     UUID productId = UUID.randomUUID();
     String skuSuffix = productId.toString().substring(0, 8);
     String createPayload = "{"
@@ -52,6 +55,7 @@ class ProductLifecycleTestCase {
 
     given(spec)
         .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
         .body(createPayload)
         .when()
         .post("/v1/products")
@@ -59,6 +63,7 @@ class ProductLifecycleTestCase {
         .statusCode(201);
 
     int getStatus = given(spec)
+        .header("Authorization", "Bearer " + token)
         .when()
         .get("/v1/products/" + productId)
         .then()
@@ -69,6 +74,7 @@ class ProductLifecycleTestCase {
 
   @Test
   void updateProductReturnsOkStatus(RequestSpecification spec) {
+    String token = loginAsCatalog(spec);
     UUID productId = UUID.randomUUID();
     String skuSuffix = productId.toString().substring(0, 8);
     String createPayload = "{"
@@ -82,6 +88,7 @@ class ProductLifecycleTestCase {
 
     given(spec)
         .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
         .body(createPayload)
         .when()
         .post("/v1/products")
@@ -98,6 +105,7 @@ class ProductLifecycleTestCase {
 
     int updateStatus = given(spec)
         .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
         .body(updatePayload)
         .when()
         .put("/v1/products/" + productId)
@@ -109,6 +117,7 @@ class ProductLifecycleTestCase {
 
   @Test
   void deleteProductReturnsNoContentStatus(RequestSpecification spec) {
+    String token = loginAsCatalog(spec);
     UUID productId = UUID.randomUUID();
     String skuSuffix = productId.toString().substring(0, 8);
     String createPayload = "{"
@@ -122,6 +131,7 @@ class ProductLifecycleTestCase {
 
     given(spec)
         .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
         .body(createPayload)
         .when()
         .post("/v1/products")
@@ -129,6 +139,7 @@ class ProductLifecycleTestCase {
         .statusCode(201);
 
     int deleteStatus = given(spec)
+        .header("Authorization", "Bearer " + token)
         .when()
         .delete("/v1/products/" + productId)
         .then()
@@ -139,6 +150,7 @@ class ProductLifecycleTestCase {
 
   @Test
   void getDeletedProductReturnsNotFoundStatus(RequestSpecification spec) {
+    String token = loginAsCatalog(spec);
     UUID productId = UUID.randomUUID();
     String skuSuffix = productId.toString().substring(0, 8);
     String createPayload = "{"
@@ -152,6 +164,7 @@ class ProductLifecycleTestCase {
 
     given(spec)
         .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
         .body(createPayload)
         .when()
         .post("/v1/products")
@@ -159,17 +172,31 @@ class ProductLifecycleTestCase {
         .statusCode(201);
 
     given(spec)
+        .header("Authorization", "Bearer " + token)
         .when()
         .delete("/v1/products/" + productId)
         .then()
         .statusCode(204);
 
     int verifyStatus = given(spec)
+        .header("Authorization", "Bearer " + token)
         .when()
         .get("/v1/products/" + productId)
         .then()
         .extract()
         .statusCode();
     assertEquals(404, verifyStatus);
+  }
+
+  private static String loginAsCatalog(RequestSpecification spec) {
+    return given(spec)
+        .contentType(ContentType.JSON)
+        .body("{\"username\":\"catalog\",\"password\":\"catalog1234\"}")
+        .when()
+        .post("/v1/auth/login")
+        .then()
+        .statusCode(200)
+        .extract()
+        .path("accessToken");
   }
 }

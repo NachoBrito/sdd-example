@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 class OrderTest {
 
   private static final UUID ORDER_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
+  private static final UUID USER_ID = UUID.fromString("33333333-3333-3333-3333-333333333333");
   private static final UUID PRODUCT_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
   private static final Instant NOW = Instant.parse("2026-11-10T12:00:00Z");
 
@@ -33,9 +34,9 @@ class OrderTest {
   void createOrderCalculatesTotalAmount() {
     OrderLine line1 = sampleOrderLine(2, 5_000);
     OrderLine line2 = sampleOrderLine(3, 1_000);
-    Order order = Order.create(
-        ORDER_ID, "John Doe", "john.doe@example.com", NOW, OrderStatus.PENDING, "USD",
-        sampleDeliveryAddress(), sampleInvoiceAddress(), List.of(line1, line2));
+    Order order = Order.create(new Order.OrderDraft(
+        ORDER_ID, USER_ID, "John Doe", "john.doe@example.com", NOW, OrderStatus.PENDING, "USD",
+        sampleDeliveryAddress(), sampleInvoiceAddress(), List.of(line1, line2)));
     assertEquals(13_000L, order.totalAmountInCents());
   }
 
@@ -47,9 +48,9 @@ class OrderTest {
 
   @Test
   void withUpdatedAttributesModifiesCustomerName() {
-    Order original = Order.create(
-        ORDER_ID, "John Doe", "john.doe@example.com", NOW, OrderStatus.PENDING, "USD",
-        sampleDeliveryAddress(), sampleInvoiceAddress(), List.of(sampleOrderLine(1, 1_000)));
+    Order original = Order.create(new Order.OrderDraft(
+        ORDER_ID, USER_ID, "John Doe", "john.doe@example.com", NOW, OrderStatus.PENDING, "USD",
+        sampleDeliveryAddress(), sampleInvoiceAddress(), List.of(sampleOrderLine(1, 1_000))));
     Instant later = NOW.plusSeconds(3_600);
     Order updated = original.withUpdatedAttributes(
         "Jane Doe", "jane.doe@example.com", NOW, OrderStatus.PAID, "USD",
@@ -60,9 +61,9 @@ class OrderTest {
 
   @Test
   void withUpdatedAttributesRecalculatesTotalAmount() {
-    Order original = Order.create(
-        ORDER_ID, "John Doe", "john.doe@example.com", NOW, OrderStatus.PENDING, "USD",
-        sampleDeliveryAddress(), sampleInvoiceAddress(), List.of(sampleOrderLine(1, 1_000)));
+    Order original = Order.create(new Order.OrderDraft(
+        ORDER_ID, USER_ID, "John Doe", "john.doe@example.com", NOW, OrderStatus.PENDING, "USD",
+        sampleDeliveryAddress(), sampleInvoiceAddress(), List.of(sampleOrderLine(1, 1_000))));
     Instant later = NOW.plusSeconds(3_600);
     Order updated = original.withUpdatedAttributes(
         "Jane Doe", "jane.doe@example.com", NOW, OrderStatus.PAID, "USD",
@@ -73,9 +74,9 @@ class OrderTest {
 
   @Test
   void withUpdatedAttributesPreservesCreatedAt() {
-    Order original = Order.create(
-        ORDER_ID, "John Doe", "john.doe@example.com", NOW, OrderStatus.PENDING, "USD",
-        sampleDeliveryAddress(), sampleInvoiceAddress(), List.of(sampleOrderLine(1, 1_000)));
+    Order original = Order.create(new Order.OrderDraft(
+        ORDER_ID, USER_ID, "John Doe", "john.doe@example.com", NOW, OrderStatus.PENDING, "USD",
+        sampleDeliveryAddress(), sampleInvoiceAddress(), List.of(sampleOrderLine(1, 1_000))));
     Instant later = NOW.plusSeconds(3_600);
     Order updated = original.withUpdatedAttributes(
         "Jane Doe", "jane.doe@example.com", NOW, OrderStatus.PAID, "USD",
@@ -86,9 +87,9 @@ class OrderTest {
 
   @Test
   void withUpdatedAttributesRefreshesUpdatedAt() {
-    Order original = Order.create(
-        ORDER_ID, "John Doe", "john.doe@example.com", NOW, OrderStatus.PENDING, "USD",
-        sampleDeliveryAddress(), sampleInvoiceAddress(), List.of(sampleOrderLine(1, 1_000)));
+    Order original = Order.create(new Order.OrderDraft(
+        ORDER_ID, USER_ID, "John Doe", "john.doe@example.com", NOW, OrderStatus.PENDING, "USD",
+        sampleDeliveryAddress(), sampleInvoiceAddress(), List.of(sampleOrderLine(1, 1_000))));
     Instant later = NOW.plusSeconds(3_600);
     Order updated = original.withUpdatedAttributes(
         "Jane Doe", "jane.doe@example.com", NOW, OrderStatus.PAID, "USD",

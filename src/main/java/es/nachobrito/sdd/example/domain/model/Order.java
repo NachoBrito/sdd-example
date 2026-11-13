@@ -11,6 +11,7 @@ import java.util.regex.Pattern;
  * Domain aggregate root representing an order.
  *
  * @param id the unique order identifier
+ * @param userId the owning user identifier
  * @param customerName the customer name
  * @param customerEmail the customer email address
  * @param date the order placement timestamp
@@ -25,6 +26,7 @@ import java.util.regex.Pattern;
  */
 public record Order(
     UUID id,
+    UUID userId,
     String customerName,
     String customerEmail,
     Instant date,
@@ -48,6 +50,9 @@ public record Order(
   public Order {
     if (id == null) {
       throw new InvalidOrderDataException("Order id cannot be null");
+    }
+    if (userId == null) {
+      throw new InvalidOrderDataException("Order userId cannot be null");
     }
     if (customerName == null || customerName.isBlank()) {
       throw new InvalidOrderDataException("Order customerName cannot be blank");
@@ -123,9 +128,34 @@ public record Order(
   }
 
   /**
-   * Creates a new Order instance with the given attributes and placement timestamp.
+   * Creates a new Order instance from the given draft attributes.
+   *
+   * @param draft the order draft attributes
+   * @return the new Order instance
+   */
+  public static Order create(OrderDraft draft) {
+    long total = calculateTotal(draft.orderLines());
+    return new Order(
+        draft.id(),
+        draft.userId(),
+        draft.customerName(),
+        draft.customerEmail(),
+        draft.date(),
+        draft.status(),
+        total,
+        draft.currency(),
+        draft.deliveryAddress(),
+        draft.invoiceAddress(),
+        draft.orderLines(),
+        draft.date(),
+        draft.date());
+  }
+
+  /**
+   * Draft parameters for creating a new order.
    *
    * @param id the unique order identifier
+   * @param userId the owning user identifier
    * @param customerName the customer name
    * @param customerEmail the customer email
    * @param date the order date
@@ -134,10 +164,10 @@ public record Order(
    * @param deliveryAddress the delivery address
    * @param invoiceAddress the invoice address
    * @param orderLines the list of order lines
-   * @return the new Order instance
    */
-  public static Order create(
+  public record OrderDraft(
       UUID id,
+      UUID userId,
       String customerName,
       String customerEmail,
       Instant date,
@@ -146,20 +176,23 @@ public record Order(
       DeliveryAddress deliveryAddress,
       InvoiceAddress invoiceAddress,
       List<OrderLine> orderLines) {
-    long total = calculateTotal(orderLines);
-    return new Order(
-        id,
-        customerName,
-        customerEmail,
-        date,
-        status,
-        total,
-        currency,
-        deliveryAddress,
-        invoiceAddress,
-        orderLines,
-        date,
-        date);
+
+    /**
+     * Creates a validated OrderDraft with an immutable order line list.
+     */
+    public OrderDraft {
+      orderLines = orderLines == null ? List.of() : List.copyOf(orderLines);
+    }
+
+    /**
+     * Returns an immutable copy of the order lines.
+     *
+     * @return the order lines
+     */
+    @Override
+    public List<OrderLine> orderLines() {
+      return List.copyOf(orderLines);
+    }
   }
 
   /**
@@ -189,6 +222,7 @@ public record Order(
     long newTotal = calculateTotal(newOrderLines);
     return new Order(
         this.id,
+        this.userId,
         newCustomerName,
         newCustomerEmail,
         newDate,

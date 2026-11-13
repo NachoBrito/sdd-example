@@ -1,8 +1,15 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
-import { createProductPayload, createOrderPayload } from '../helpers/payloads.js';
+import {
+  authHeaders,
+  createProductPayload,
+  createOrderPayload,
+  login
+} from '../helpers/payloads.js';
 
 const TARGET_URL = __ENV.TARGET_URL || 'http://localhost:8080';
+const ADMIN_USER = __ENV.ADMIN_USER || 'admin';
+const ADMIN_PASS = __ENV.ADMIN_PASS || 'admin1234';
 
 export const options = {
   thresholds: {
@@ -11,22 +18,19 @@ export const options = {
   },
 };
 
-const JSON_HEADERS = {
-  'Content-Type': 'application/json',
-  Accept: 'application/json',
-};
-
 /**
- * Setup lifecycle: ensures valid product identifiers exist in the database
+ * Setup lifecycle: authenticates and ensures valid product identifiers exist
  * before virtual users begin submitting orders.
  */
 export function setup() {
+  const tokens = login(TARGET_URL, ADMIN_USER, ADMIN_PASS);
+  const headers = authHeaders(tokens.accessToken);
   const productIds = [];
 
   // Query existing active products
   const listRes = http.get(
     `${TARGET_URL}/v1/products?limit=20&offset=0&status=ACTIVE`,
-    { headers: { Accept: 'application/json' } }
+    { headers: headers }
   );
 
   if (listRes.status === 200) {
@@ -49,7 +53,7 @@ export function setup() {
     const postRes = http.post(
       `${TARGET_URL}/v1/products`,
       payload,
-      { headers: JSON_HEADERS }
+      { headers: headers }
     );
 
     if (postRes.status === 201) {
@@ -62,10 +66,11 @@ export function setup() {
     }
   }
 
-  return { productIds: productIds };
+  return { productIds: productIds, token: tokens.accessToken };
 }
 
 export default function (data) {
+  const headers = authHeaders(data.token);
   const productIds = data.productIds || [];
   if (productIds.length === 0) {
     throw new Error('No valid product identifiers available for order processing scenario.');
@@ -76,7 +81,7 @@ export default function (data) {
   const postRes = http.post(
     `${TARGET_URL}/v1/orders`,
     orderPayload,
-    { headers: JSON_HEADERS }
+    { headers: headers }
   );
 
   const orderCreated = check(postRes, {
@@ -99,7 +104,7 @@ export default function (data) {
   if (createdOrderId) {
     const getRes = http.get(
       `${TARGET_URL}/v1/orders/${createdOrderId}`,
-      { headers: { Accept: 'application/json' } }
+      { headers: headers }
     );
 
     check(getRes, {
@@ -113,7 +118,7 @@ export default function (data) {
   if (Math.random() < 0.4) {
     const listRes = http.get(
       `${TARGET_URL}/v1/orders?limit=10&offset=0`,
-      { headers: { Accept: 'application/json' } }
+      { headers: headers }
     );
 
     check(listRes, {

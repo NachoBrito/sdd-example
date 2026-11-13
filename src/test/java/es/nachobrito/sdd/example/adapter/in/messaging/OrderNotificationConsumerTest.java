@@ -36,6 +36,7 @@ class OrderNotificationConsumerTest {
     OrderLinePayloadDto line = new OrderLinePayloadDto(UUID.randomUUID(), 1, 500, 500);
     OrderPayloadDto order = new OrderPayloadDto(
         orderId,
+        UUID.randomUUID(),
         "Charlie",
         "charlie@example.com",
         Instant.now(),

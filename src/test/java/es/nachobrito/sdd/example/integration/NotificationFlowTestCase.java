@@ -150,14 +150,16 @@ class NotificationFlowTestCase implements TestPropertyProvider {
   @Test
   void orderLifecycleEventsTriggerAsynchronousNotifications(RequestSpecification spec)
       throws InterruptedException {
+    String token = loginAsAdmin(spec);
     UUID orderId = UUID.randomUUID();
-    UUID productId = createProduct(spec);
+    UUID productId = createProduct(spec, token);
     String customerEmail = "customer-" + orderId + "@example.com";
 
     String createPayload = buildCreateOrderPayload(orderId, productId, customerEmail);
 
     int status = given(spec)
         .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
         .body(createPayload)
         .when()
         .post("/v1/orders")
@@ -176,6 +178,7 @@ class NotificationFlowTestCase implements TestPropertyProvider {
     String updatePayload = buildUpdateOrderPayload(productId, customerEmail, "PAID");
     given(spec)
         .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
         .body(updatePayload)
         .when()
         .put("/v1/orders/" + orderId)
@@ -189,6 +192,7 @@ class NotificationFlowTestCase implements TestPropertyProvider {
     String cancelPayload = buildUpdateOrderPayload(productId, customerEmail, "CANCELLED");
     given(spec)
         .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
         .body(cancelPayload)
         .when()
         .put("/v1/orders/" + orderId)
@@ -214,7 +218,19 @@ class NotificationFlowTestCase implements TestPropertyProvider {
     return null;
   }
 
-  private static UUID createProduct(RequestSpecification spec) {
+  private static String loginAsAdmin(RequestSpecification spec) {
+    return given(spec)
+        .contentType(ContentType.JSON)
+        .body("{\"username\":\"admin\",\"password\":\"admin1234\"}")
+        .when()
+        .post("/v1/auth/login")
+        .then()
+        .statusCode(200)
+        .extract()
+        .path("accessToken");
+  }
+
+  private static UUID createProduct(RequestSpecification spec, String token) {
     UUID productId = UUID.randomUUID();
     String skuSuffix = productId.toString().substring(0, 8);
     String createPayload = "{"
@@ -229,6 +245,7 @@ class NotificationFlowTestCase implements TestPropertyProvider {
 
     given(spec)
         .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
         .body(createPayload)
         .when()
         .post("/v1/products")

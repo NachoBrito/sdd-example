@@ -47,6 +47,7 @@ class OrderServiceCommandTest {
   private Instant now;
 
   private static final UUID ORDER_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
+  private static final UUID USER_ID = UUID.fromString("33333333-3333-3333-3333-333333333333");
   private static final UUID PRODUCT_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
   private static final DeliveryAddress DELIVERY = new DeliveryAddress(
       "Alice Smith", "+1-555-123-4567", "123 Main St", "Apt 4B",
@@ -67,12 +68,12 @@ class OrderServiceCommandTest {
   @Test
   void createOrderSavesAndReturnsOrder() {
     CreateOrderCommand command = new CreateOrderCommand(
-        ORDER_ID, "John Doe", "john@example.com", null, null, "USD",
+        ORDER_ID, USER_ID, "John Doe", "john@example.com", null, null, "USD",
         DELIVERY, INVOICE, LINES);
 
-    Order expected = Order.create(
-        ORDER_ID, "John Doe", "john@example.com", now, OrderStatus.PENDING, "USD",
-        DELIVERY, INVOICE, LINES);
+    Order expected = Order.create(new Order.OrderDraft(
+        ORDER_ID, USER_ID, "John Doe", "john@example.com", now, OrderStatus.PENDING, "USD",
+        DELIVERY, INVOICE, LINES));
 
     when(repository.existsById(ORDER_ID)).thenReturn(false);
     when(repository.save(any(Order.class))).thenReturn(expected);
@@ -85,7 +86,7 @@ class OrderServiceCommandTest {
   @Test
   void createOrderDefaultsStatusToPending() {
     CreateOrderCommand command = new CreateOrderCommand(
-        ORDER_ID, "John Doe", "john@example.com", null, null, "USD",
+        ORDER_ID, USER_ID, "John Doe", "john@example.com", null, null, "USD",
         DELIVERY, INVOICE, LINES);
 
     when(repository.existsById(ORDER_ID)).thenReturn(false);
@@ -98,7 +99,7 @@ class OrderServiceCommandTest {
   @Test
   void createOrderDefaultsDateToNow() {
     CreateOrderCommand command = new CreateOrderCommand(
-        ORDER_ID, "John Doe", "john@example.com", null, null, "USD",
+        ORDER_ID, USER_ID, "John Doe", "john@example.com", null, null, "USD",
         DELIVERY, INVOICE, LINES);
 
     when(repository.existsById(ORDER_ID)).thenReturn(false);
@@ -112,7 +113,7 @@ class OrderServiceCommandTest {
   void createOrderUsesExplicitDate() {
     Instant explicitDate = Instant.parse("2026-11-01T08:00:00Z");
     CreateOrderCommand command = new CreateOrderCommand(
-        ORDER_ID, "John Doe", "john@example.com", explicitDate, OrderStatus.PAID, "USD",
+        ORDER_ID, USER_ID, "John Doe", "john@example.com", explicitDate, OrderStatus.PAID, "USD",
         DELIVERY, INVOICE, LINES);
 
     when(repository.existsById(ORDER_ID)).thenReturn(false);
@@ -125,7 +126,7 @@ class OrderServiceCommandTest {
   @Test
   void createOrderUsesExplicitStatus() {
     CreateOrderCommand command = new CreateOrderCommand(
-        ORDER_ID, "John Doe", "john@example.com", now, OrderStatus.PAID, "USD",
+        ORDER_ID, USER_ID, "John Doe", "john@example.com", now, OrderStatus.PAID, "USD",
         DELIVERY, INVOICE, LINES);
 
     when(repository.existsById(ORDER_ID)).thenReturn(false);
@@ -138,7 +139,7 @@ class OrderServiceCommandTest {
   @Test
   void createOrderRejectsDuplicateId() {
     CreateOrderCommand command = new CreateOrderCommand(
-        ORDER_ID, "John Doe", "john@example.com", null, null, "USD",
+        ORDER_ID, USER_ID, "John Doe", "john@example.com", null, null, "USD",
         DELIVERY, INVOICE, LINES);
 
     when(repository.existsById(ORDER_ID)).thenReturn(true);
@@ -148,9 +149,9 @@ class OrderServiceCommandTest {
 
   @Test
   void updateOrderModifiesAttributes() {
-    Order existing = Order.create(
-        ORDER_ID, "John Doe", "john@example.com", now, OrderStatus.PENDING, "USD",
-        DELIVERY, INVOICE, LINES);
+    Order existing = Order.create(new Order.OrderDraft(
+        ORDER_ID, USER_ID, "John Doe", "john@example.com", now, OrderStatus.PENDING, "USD",
+        DELIVERY, INVOICE, LINES));
 
     when(repository.findById(ORDER_ID)).thenReturn(Optional.of(existing));
     when(repository.update(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -166,9 +167,9 @@ class OrderServiceCommandTest {
 
   @Test
   void updateOrderToCancelledPublishesCancelledEvent() {
-    Order existing = Order.create(
-        ORDER_ID, "John Doe", "john@example.com", now, OrderStatus.PENDING, "USD",
-        DELIVERY, INVOICE, LINES);
+    Order existing = Order.create(new Order.OrderDraft(
+        ORDER_ID, USER_ID, "John Doe", "john@example.com", now, OrderStatus.PENDING, "USD",
+        DELIVERY, INVOICE, LINES));
 
     when(repository.findById(ORDER_ID)).thenReturn(Optional.of(existing));
     when(repository.update(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -198,7 +199,7 @@ class OrderServiceCommandTest {
     UUID missingProductId = UUID.randomUUID();
     List<OrderLine> missingLines = List.of(new OrderLine(missingProductId, 1, 1000));
     CreateOrderCommand command = new CreateOrderCommand(
-        ORDER_ID, "John Doe", "john@example.com", null, null, "USD",
+        ORDER_ID, USER_ID, "John Doe", "john@example.com", null, null, "USD",
         DELIVERY, INVOICE, missingLines);
 
     when(repository.existsById(ORDER_ID)).thenReturn(false);
@@ -213,9 +214,9 @@ class OrderServiceCommandTest {
   void updateOrderThrowsInvalidOrderDataExceptionWhenProductNotFound() {
     UUID missingProductId = UUID.randomUUID();
     List<OrderLine> missingLines = List.of(new OrderLine(missingProductId, 1, 1000));
-    Order existing = Order.create(
-        ORDER_ID, "John Doe", "john@example.com", now, OrderStatus.PENDING, "USD",
-        DELIVERY, INVOICE, LINES);
+    Order existing = Order.create(new Order.OrderDraft(
+        ORDER_ID, USER_ID, "John Doe", "john@example.com", now, OrderStatus.PENDING, "USD",
+        DELIVERY, INVOICE, LINES));
 
     when(repository.findById(ORDER_ID)).thenReturn(Optional.of(existing));
     when(productRepository.existsById(missingProductId)).thenReturn(false);

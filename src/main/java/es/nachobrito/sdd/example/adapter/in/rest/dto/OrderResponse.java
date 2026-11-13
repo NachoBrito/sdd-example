@@ -14,6 +14,7 @@ import java.util.UUID;
  * REST API response model representing an order aggregate.
  *
  * @param id the order identifier
+ * @param userId the owning user identifier
  * @param customerName the customer name
  * @param customerEmail the customer email
  * @param date the order placement timestamp
@@ -30,6 +31,7 @@ import java.util.UUID;
 @Introspected
 public record OrderResponse(
     UUID id,
+    UUID userId,
     String customerName,
     String customerEmail,
     Instant date,
@@ -68,6 +70,7 @@ public record OrderResponse(
 
     return new OrderResponse(
         domain.id(),
+        domain.userId(),
         domain.customerName(),
         domain.customerEmail(),
         domain.date(),

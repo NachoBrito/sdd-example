@@ -55,6 +55,7 @@ public interface OrderRepositoryPort {
   /**
    * Queries orders matching the specified filter criteria and sort options.
    *
+   * @param userId optional owning user identifier filter
    * @param status optional order status filter
    * @param customerEmail optional customer email filter
    * @param startDate optional start date filter
@@ -64,11 +65,33 @@ public interface OrderRepositoryPort {
    * @return the list of matching orders
    */
   List<Order> findAll(
+      @Nullable UUID userId,
       @Nullable OrderStatus status,
       @Nullable String customerEmail,
       @Nullable Instant startDate,
       @Nullable Instant endDate,
       String sortField,
       String direction);
+
+  /**
+   * Queries orders without a user filter.
+   *
+   * @param status optional order status filter
+   * @param customerEmail optional customer email filter
+   * @param startDate optional start date filter
+   * @param endDate optional end date filter
+   * @param sortField the field to sort by (date, status)
+   * @param direction the sort direction (asc, desc)
+   * @return the list of matching orders
+   */
+  default List<Order> findAll(
+      @Nullable OrderStatus status,
+      @Nullable String customerEmail,
+      @Nullable Instant startDate,
+      @Nullable Instant endDate,
+      String sortField,
+      String direction) {
+    return findAll(null, status, customerEmail, startDate, endDate, sortField, direction);
+  }
 }
 

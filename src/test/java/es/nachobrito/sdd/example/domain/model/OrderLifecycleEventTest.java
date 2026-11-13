@@ -28,6 +28,7 @@ class OrderLifecycleEventTest {
 
     order = new Order(
         orderId,
+        UUID.randomUUID(),
         "Eve",
         "eve@example.com",
         Instant.now(),

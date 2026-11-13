@@ -1,8 +1,15 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
-import { createProductPayload, createOrderPayload } from '../helpers/payloads.js';
+import {
+  authHeaders,
+  createProductPayload,
+  createOrderPayload,
+  login
+} from '../helpers/payloads.js';
 
 const TARGET_URL = __ENV.TARGET_URL || 'http://localhost:8080';
+const ADMIN_USER = __ENV.ADMIN_USER || 'admin';
+const ADMIN_PASS = __ENV.ADMIN_PASS || 'admin1234';
 
 export const options = {
   thresholds: {
@@ -11,21 +18,18 @@ export const options = {
   },
 };
 
-const JSON_HEADERS = {
-  'Content-Type': 'application/json',
-  Accept: 'application/json',
-};
-
 /**
- * Setup lifecycle: acquires a pool of active product identifiers
+ * Setup lifecycle: authenticates and acquires a pool of active product identifiers
  * before user simulation begins.
  */
 export function setup() {
+  const tokens = login(TARGET_URL, ADMIN_USER, ADMIN_PASS);
+  const headers = authHeaders(tokens.accessToken);
   const productIds = [];
 
   const listRes = http.get(
     `${TARGET_URL}/v1/products?limit=20&offset=0&status=ACTIVE`,
-    { headers: { Accept: 'application/json' } }
+    { headers: headers }
   );
 
   if (listRes.status === 200) {
@@ -47,7 +51,7 @@ export function setup() {
     const postRes = http.post(
       `${TARGET_URL}/v1/products`,
       payload,
-      { headers: JSON_HEADERS }
+      { headers: headers }
     );
 
     if (postRes.status === 201) {
@@ -60,10 +64,11 @@ export function setup() {
     }
   }
 
-  return { productIds: productIds };
+  return { productIds: productIds, token: tokens.accessToken };
 }
 
 export default function (data) {
+  const headers = authHeaders(data.token);
   const productIds = data.productIds || [];
   const roll = Math.random();
 
@@ -71,7 +76,7 @@ export default function (data) {
     // 1. Catalog Browsing (60% of requests)
     const listRes = http.get(
       `${TARGET_URL}/v1/products?limit=10&offset=0&status=ACTIVE`,
-      { headers: { Accept: 'application/json' } }
+      { headers: headers }
     );
 
     check(listRes, {
@@ -83,7 +88,7 @@ export default function (data) {
       const randomProductId = productIds[Math.floor(Math.random() * productIds.length)];
       const getRes = http.get(
         `${TARGET_URL}/v1/products/${randomProductId}`,
-        { headers: { Accept: 'application/json' } }
+        { headers: headers }
       );
 
       check(getRes, {
@@ -96,7 +101,7 @@ export default function (data) {
     const postRes = http.post(
       `${TARGET_URL}/v1/products`,
       payload,
-      { headers: JSON_HEADERS }
+      { headers: headers }
     );
 
     const created = check(postRes, {
@@ -120,7 +125,7 @@ export default function (data) {
       const postRes = http.post(
         `${TARGET_URL}/v1/orders`,
         orderPayload,
-        { headers: JSON_HEADERS }
+        { headers: headers }
       );
 
       const orderCreated = check(postRes, {
@@ -133,7 +138,7 @@ export default function (data) {
           if (orderBody.id) {
             const getOrderRes = http.get(
               `${TARGET_URL}/v1/orders/${orderBody.id}`,
-              { headers: { Accept: 'application/json' } }
+              { headers: headers }
             );
 
             check(getOrderRes, {

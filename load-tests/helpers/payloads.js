@@ -1,6 +1,7 @@
 /**
  * Helper utilities and realistic synthetic payload generators for k6 load tests.
  */
+import http from 'k6/http';
 
 /**
  * Generates a compliant RFC 4122 version 4 UUID.
@@ -153,6 +154,57 @@ export function createOrderPayload(productIds, overrides = {}) {
     },
     orderLines: orderLines,
     ...overrides
+  };
+}
+
+/**
+ * Creates a user registration payload with a unique UUID and username.
+ *
+ * @param {Object} [overrides] Optional attribute overrides
+ * @returns {Object} Registration payload
+ */
+export function createRegisterPayload(overrides = {}) {
+  const suffix = randomString(10).toLowerCase();
+  return {
+    userId: overrides.userId || uuidv4(),
+    username: overrides.username || `loaduser_${suffix}`,
+    password: overrides.password || 'LoadTestPass123!',
+    ...overrides
+  };
+}
+
+/**
+ * Authenticates against /v1/auth/login and returns the access and refresh tokens.
+ *
+ * @param {string} targetUrl Base service URL
+ * @param {string} username Account username
+ * @param {string} password Account password
+ * @returns {{ accessToken: string, refreshToken: string }} Issued JWT tokens
+ */
+export function login(targetUrl, username, password) {
+  const res = http.post(
+    `${targetUrl}/v1/auth/login`,
+    JSON.stringify({ username: username, password: password }),
+    { headers: { 'Content-Type': 'application/json', Accept: 'application/json' } }
+  );
+  if (res.status !== 200) {
+    throw new Error(`Login failed for ${username} with status ${res.status}: ${res.body}`);
+  }
+  const body = JSON.parse(res.body);
+  return { accessToken: body.accessToken, refreshToken: body.refreshToken };
+}
+
+/**
+ * Builds JSON request headers with a Bearer authorization token.
+ *
+ * @param {string} token JWT access token
+ * @returns {Object} HTTP headers map
+ */
+export function authHeaders(token) {
+  return {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+    Authorization: `Bearer ${token}`
   };
 }
 
