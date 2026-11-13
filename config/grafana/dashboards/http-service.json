@@ -18,7 +18,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "sum(rate(http_server_requests_seconds_count[1m])) by (uri, method)",
+          "expr": "sum(rate(http_server_requests_milliseconds_count[1m])) by (uri, method)",
           "legendFormat": "{{method}} {{uri}}",
           "refId": "A"
         }
@@ -33,7 +33,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "sum(rate(http_server_requests_seconds_count[1m])) by (status)",
+          "expr": "sum(rate(http_server_requests_milliseconds_count[1m])) by (status)",
           "legendFormat": "HTTP {{status}}",
           "refId": "A"
         }
@@ -43,13 +43,13 @@
       "collapsed": false,
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
       "id": 3,
-      "title": "HTTP Response Latency (p95)",
+      "title": "HTTP Response Latency",
       "type": "timeseries",
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[1m])) by (le))",
-          "legendFormat": "p95 Latency",
+          "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_milliseconds_bucket[1m])) by (le)) or (rate(http_server_requests_milliseconds_sum[1m]) / rate(http_server_requests_milliseconds_count[1m]))",
+          "legendFormat": "Latency (ms)",
           "refId": "A"
         }
       ]
@@ -63,7 +63,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "jvm_memory_used_bytes{area=\"heap\"}",
+          "expr": "sum(jvm_memory_used_bytes{area=\"heap\"})",
           "legendFormat": "Heap Used",
           "refId": "A"
         }
@@ -83,4 +83,3 @@
   "title": "SDD Example - HTTP Service Metrics",
   "uid": "sdd-http-service"
 }
-

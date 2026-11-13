@@ -95,7 +95,19 @@ Execute the requests in sequence to test all CRUD workflows and observe error ha
 
 ---
 
-## 7. Stop the Service
+## 7. Run Load Testing and Performance Validation
+
+Execute automated load scenarios to validate throughput, latency, and stability under concurrent traffic:
+
+```bash
+./load-tests/run.sh
+```
+
+Read the [Load Testing Guide](load-testing.md) for available scenarios, parameters, and threshold options.
+
+---
+
+## 8. Stop the Service
 
 Stop all running containers:
 

@@ -1,0 +1,80 @@
+# Scenario Contracts: HTTP Endpoints and Workload Profiles
+scenarios:
+  products:
+    description: "Evaluates product catalog throughput and latency"
+    targetEndpoints:
+      - method: GET
+        path: "/v1/products"
+        query:
+          limit: 10
+          offset: 0
+          status: "ACTIVE"
+        expectedStatus: 200
+        weight: 50
+      - method: GET
+        path: "/v1/products/{productId}"
+        expectedStatus: 200
+        weight: 20
+      - method: POST
+        path: "/v1/products"
+        headers:
+          Content-Type: "application/json"
+        expectedStatus: 201
+        weight: 30
+    thresholds:
+      http_req_failed: "rate<0.01"
+      http_req_duration:
+        - "p(95)<500"
+        - "p(99)<1000"
+
+  orders:
+    description: "Evaluates transactional order processing throughput and latency"
+    prerequisites:
+      - "Valid product exists in catalog before order submission"
+    targetEndpoints:
+      - method: POST
+        path: "/v1/orders"
+        headers:
+          Content-Type: "application/json"
+        expectedStatus: 201
+        weight: 50
+      - method: GET
+        path: "/v1/orders/{orderId}"
+        expectedStatus: 200
+        weight: 30
+      - method: GET
+        path: "/v1/orders"
+        query:
+          limit: 10
+          offset: 0
+        expectedStatus: 200
+        weight: 20
+    thresholds:
+      http_req_failed: "rate<0.01"
+      http_req_duration:
+        - "p(95)<500"
+        - "p(99)<1000"
+
+  mixed:
+    description: "Realistic user traffic combining catalog browsing with order checkout"
+    distribution:
+      catalogBrowsing: 60
+      productDetailView: 20
+      productCreation: 10
+      orderPlacement: 10
+    thresholds:
+      http_req_failed: "rate<0.01"
+      http_req_duration:
+        - "p(95)<500"
+        - "p(99)<1000"
+
+  stability:
+    description: "Sustained constant traffic verifying system stability without degradation"
+    defaultDuration: "5m"
+    steadyStateVus: 20
+    thresholds:
+      http_req_failed: "rate<0.01"
+      http_req_duration:
+        - "p(95)<500"
+        - "p(99)<1000"
+

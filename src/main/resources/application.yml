@@ -3,6 +3,10 @@ micronaut:
     name: sdd-example
   metrics:
     enabled: true
+    binders:
+      web:
+        server:
+          histogram: true
     export:
       otlp:
         # Send the Micrometer metrics to an OpenTelemetry collector (OTLP).
