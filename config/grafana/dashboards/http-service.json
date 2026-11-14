@@ -48,14 +48,20 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_milliseconds_bucket[1m])) by (le)) or (rate(http_server_requests_milliseconds_sum[1m]) / rate(http_server_requests_milliseconds_count[1m]))",
-          "legendFormat": "Latency (ms)",
+          "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_milliseconds_bucket[1m])) by (le, method, uri)) or (sum(rate(http_server_requests_milliseconds_sum[1m])) by (method, uri) / sum(rate(http_server_requests_milliseconds_count[1m])) by (method, uri))",
+          "legendFormat": "{{method}} {{uri}}",
           "refId": "A"
         }
       ]
     },
     {
       "collapsed": false,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decbytes"
+        },
+        "overrides": []
+      },
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
       "id": 4,
       "title": "JVM Heap Memory Usage",
