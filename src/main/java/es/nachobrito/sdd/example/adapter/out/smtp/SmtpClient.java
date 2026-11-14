@@ -30,6 +30,7 @@ public class SmtpClient {
    * @param htmlBody HTML body content
    * @throws IOException when network or protocol errors occur
    */
+  @SmtpMetrics
   public void sendEmail(
       String host,
       int port,

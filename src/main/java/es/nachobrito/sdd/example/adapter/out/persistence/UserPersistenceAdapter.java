@@ -13,6 +13,7 @@ import java.util.UUID;
  * JDBC persistence adapter implementing {@link UserRepositoryPort}.
  */
 @Singleton
+@DbQueryMetrics
 public class UserPersistenceAdapter implements UserRepositoryPort {
 
   private final UserJdbcRepository userRepository;

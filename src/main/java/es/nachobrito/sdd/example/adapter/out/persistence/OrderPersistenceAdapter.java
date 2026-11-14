@@ -19,6 +19,7 @@ import org.jspecify.annotations.Nullable;
  * Persistence adapter implementing the OrderRepositoryPort with Micronaut Data JDBC.
  */
 @Singleton
+@DbQueryMetrics
 public class OrderPersistenceAdapter implements OrderRepositoryPort {
 
   private final OrderJdbcRepository orderRepository;

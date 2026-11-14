@@ -10,6 +10,7 @@ import java.util.UUID;
  * JDBC persistence adapter implementing {@link AuthTokenRepositoryPort}.
  */
 @Singleton
+@DbQueryMetrics
 public class AuthTokenPersistenceAdapter implements AuthTokenRepositoryPort {
 
   private final AuthTokenJdbcRepository repository;

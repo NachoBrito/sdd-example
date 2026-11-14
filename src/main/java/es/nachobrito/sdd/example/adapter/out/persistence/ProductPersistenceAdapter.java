@@ -15,6 +15,7 @@ import org.jspecify.annotations.Nullable;
  * Persistence adapter implementing the ProductRepositoryPort using Micronaut Data JDBC.
  */
 @Singleton
+@DbQueryMetrics
 public class ProductPersistenceAdapter implements ProductRepositoryPort {
 
   private final ProductJdbcRepository repository;
