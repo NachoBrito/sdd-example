@@ -1,5 +1,10 @@
 # sdd-example
 
+> [!NOTE]
+> This project is fully AI-generated.
+> SpecKit generated every artifact except the `docs/prompts` folder, including project configuration, source code, and documentation.
+> Strict static code analysis rules enforce code quality and maintainability.
+
 `sdd-example` is a REST API project built with Java 25 and the Micronaut framework.
 The project follows Hexagonal Architecture and Domain-Driven Design principles.
 
@@ -59,6 +64,7 @@ Read [Running the Service Locally](docs/running/README.md) for detailed executio
 
 ## Documentation
 
+- [Technical Design](docs/technical-design.md): Domain model ER diagram, component architecture, and main use case flows.
 - [Running Locally](docs/running/README.md): Procedures to run the service and backing infrastructure with Docker Compose.
 - [Project Setup](docs/project-setup.md): Complete guide to architecture, libraries, conventions, and operational tasks.
 - [Static Analysis](docs/static-analysis.md): Rules, thresholds, and configurations for Checkstyle, PMD, SpotBugs, ArchUnit, and Pitest.
