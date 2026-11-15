@@ -45,6 +45,14 @@ public interface ProductRepositoryPort {
   boolean existsById(UUID id);
 
   /**
+   * Checks if any product references the given category identifier.
+   *
+   * @param categoryId the category identifier
+   * @return true if at least one product references the category
+   */
+  boolean existsByCategoryId(UUID categoryId);
+
+  /**
    * Checks if a product exists with the specified SKU.
    *
    * @param sku the stock keeping unit

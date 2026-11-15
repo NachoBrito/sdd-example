@@ -1,0 +1,153 @@
+openapi: 3.0.3
+info:
+  title: Product Categories API
+  version: 1.0.0
+  description: Versioned REST endpoints for creating, listing, and deleting product categories.
+paths:
+  /v1/categories:
+    post:
+      summary: Create a category
+      description: Creates a new product category with a client-generated UUID. Restricted to ADMIN users.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCategoryRequest'
+      responses:
+        '201':
+          description: Category created
+          headers:
+            Location:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Authentication required
+        '403':
+          description: ADMIN role required
+        '409':
+          description: Category identifier already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      summary: List categories
+      description: Lists all categories with optional case-insensitive substring filters on name and description. Accessible to CUSTOMER and CATALOG users.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: name
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: description
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Matching categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CategoryResponse'
+        '401':
+          description: Authentication required
+        '403':
+          description: CUSTOMER or CATALOG role required
+
+  /v1/categories/{id}:
+    delete:
+      summary: Delete a category
+      description: Permanently deletes a category when no products reference it. Restricted to ADMIN users.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Category deleted
+        '401':
+          description: Authentication required
+        '403':
+          description: ADMIN role required
+        '404':
+          description: Category not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Category cannot be deleted while assigned to products
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    CreateCategoryRequest:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+          nullable: true
+          maxLength: 4000
+    CategoryResponse:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+    ErrorResponse:
+      type: object
+      required: [message, details]
+      properties:
+        message:
+          type: string
+        details:
+          type: array
+          items:
+            type: string
+

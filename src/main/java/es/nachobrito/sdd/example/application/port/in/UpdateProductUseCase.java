@@ -29,6 +29,7 @@ public interface UpdateProductUseCase {
    * @param priceInCents the updated price in integer cents
    * @param currency the updated ISO-4217 currency code
    * @param status the updated product status
+   * @param categoryId the updated optional category identifier
    */
   record UpdateProductCommand(
       UUID id,
@@ -37,6 +38,7 @@ public interface UpdateProductUseCase {
       @Nullable String description,
       int priceInCents,
       String currency,
-      ProductStatus status) {}
+      ProductStatus status,
+      @Nullable UUID categoryId) {}
 }
 

@@ -1,0 +1,98 @@
+### Campaign Management API Requests
+# Use this file to test the campaign endpoints in IntelliJ IDEA or VS Code REST Client.
+
+@host = http://localhost:8080
+@campaignId = 55555555-5555-5555-5555-555555555555
+@categoryId = 44444444-4444-4444-4444-444444444444
+
+### 0. Login as Seeded Admin User (200 OK)
+# Only ADMIN users can manage or list campaigns.
+POST {{host}}/v1/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin1234"
+}
+
+> {%
+  client.global.set("adminAccessToken", response.body.accessToken);
+%}
+
+### 1. Create Campaign (201 Created)
+POST {{host}}/v1/campaigns
+Authorization: Bearer {{adminAccessToken}}
+Content-Type: application/json
+
+{
+  "id": "{{campaignId}}",
+  "name": "Seasonal Keyboard Sale",
+  "description": "Applies a 15 percent discount to keyboards above 50 EUR",
+  "status": "ACTIVE",
+  "startDate": "2026-01-01T00:00:00Z",
+  "endDate": "2027-12-31T23:59:59Z",
+  "discountPercent": 15,
+  "predicates": [
+    {
+      "predicateType": "IN_CATEGORY",
+      "value": "{{categoryId}}"
+    },
+    {
+      "predicateType": "IS_MORE_EXPENSIVE_THAN",
+      "value": "5000"
+    }
+  ]
+}
+
+### 2. List Campaigns with Optional Filters (200 OK)
+GET {{host}}/v1/campaigns?name=Seasonal&description=keyboards&status=ACTIVE&startDate=2026-06-01T00:00:00Z&endDate=2027-06-01T00:00:00Z
+Authorization: Bearer {{adminAccessToken}}
+Accept: application/json
+
+### 3. Update Campaign (200 OK)
+PUT {{host}}/v1/campaigns/{{campaignId}}
+Authorization: Bearer {{adminAccessToken}}
+Content-Type: application/json
+
+{
+  "name": "Extended Keyboard Sale",
+  "description": "Applies a 20 percent discount to all keyboards under 200 EUR",
+  "status": "ACTIVE",
+  "startDate": "2026-01-01T00:00:00Z",
+  "endDate": "2027-12-31T23:59:59Z",
+  "discountPercent": 20,
+  "predicates": [
+    {
+      "predicateType": "IN_CATEGORY",
+      "value": "{{categoryId}}"
+    },
+    {
+      "predicateType": "IS_CHEAPER_THAN",
+      "value": "20000"
+    }
+  ]
+}
+
+### 4. Create Campaign - Validation Error (400 Bad Request)
+POST {{host}}/v1/campaigns
+Authorization: Bearer {{adminAccessToken}}
+Content-Type: application/json
+
+{
+  "id": "55555555-5555-5555-5555-555555555556",
+  "name": "Invalid Discount Campaign",
+  "status": "DRAFT",
+  "startDate": "2026-12-10T00:00:00Z",
+  "endDate": "2026-12-01T00:00:00Z",
+  "discountPercent": 120,
+  "predicates": []
+}
+
+### 5. Delete Campaign (204 No Content)
+DELETE {{host}}/v1/campaigns/{{campaignId}}
+Authorization: Bearer {{adminAccessToken}}
+
+### 6. Delete Non-Existent Campaign (404 Not Found)
+DELETE {{host}}/v1/campaigns/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{adminAccessToken}}
+

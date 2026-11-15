@@ -23,7 +23,7 @@ class ProductNullValidationTest {
         InvalidProductDataException.class,
         () -> new Product(
             null, VALID_SKU, VALID_NAME, VALID_DESC,
-            VALID_PRICE, VALID_CURRENCY, VALID_STATUS, NOW, NOW));
+            VALID_PRICE, VALID_CURRENCY, VALID_STATUS, null, NOW, NOW));
   }
 
   @Test
@@ -68,7 +68,7 @@ class ProductNullValidationTest {
         InvalidProductDataException.class,
         () -> new Product(
             VALID_ID, VALID_SKU, VALID_NAME, VALID_DESC,
-            VALID_PRICE, VALID_CURRENCY, VALID_STATUS, null, NOW));
+            VALID_PRICE, VALID_CURRENCY, VALID_STATUS, null, null, NOW));
   }
 
   @Test
@@ -77,7 +77,7 @@ class ProductNullValidationTest {
         InvalidProductDataException.class,
         () -> new Product(
             VALID_ID, VALID_SKU, VALID_NAME, VALID_DESC,
-            VALID_PRICE, VALID_CURRENCY, VALID_STATUS, NOW, null));
+            VALID_PRICE, VALID_CURRENCY, VALID_STATUS, null, NOW, null));
   }
 }
 

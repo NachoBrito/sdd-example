@@ -16,6 +16,7 @@ import org.jspecify.annotations.Nullable;
  * @param priceInCents the price in integer cents
  * @param currency the ISO-4217 three-letter currency code
  * @param status the product lifecycle status
+ * @param categoryId the optional category identifier
  * @param createdAt the creation timestamp in UTC
  * @param updatedAt the last update timestamp in UTC
  */
@@ -27,6 +28,7 @@ public record Product(
     int priceInCents,
     String currency,
     ProductStatus status,
+    @Nullable UUID categoryId,
     Instant createdAt,
     Instant updatedAt) {
 
@@ -85,7 +87,7 @@ public record Product(
   }
 
   /**
-   * Creates a new Product with the specified attributes and timestamps.
+   * Creates a new Product without a category and with the specified timestamp.
    *
    * @param id the unique product identifier
    * @param sku the stock keeping unit
@@ -106,13 +108,50 @@ public record Product(
       String currency,
       ProductStatus status,
       Instant timestamp) {
-    Objects.requireNonNull(timestamp, "Timestamp cannot be null");
-    return new Product(
-        id, sku, name, description, priceInCents, currency, status, timestamp, timestamp);
+    return create(
+        id, sku, name, description, priceInCents, currency, status, null, timestamp);
   }
 
   /**
-   * Returns a new Product instance with updated attributes and refreshed timestamp.
+   * Creates a new Product with the specified attributes, optional category, and timestamp.
+   *
+   * @param id the unique product identifier
+   * @param sku the stock keeping unit
+   * @param name the product name
+   * @param description the optional description
+   * @param priceInCents the price in cents
+   * @param currency the ISO-4217 currency code
+   * @param status the product status
+   * @param categoryId the optional category identifier
+   * @param timestamp the creation and update timestamp
+   * @return the new Product instance
+   */
+  public static Product create(
+      UUID id,
+      String sku,
+      String name,
+      @Nullable String description,
+      int priceInCents,
+      String currency,
+      ProductStatus status,
+      @Nullable UUID categoryId,
+      Instant timestamp) {
+    Objects.requireNonNull(timestamp, "Timestamp cannot be null");
+    return new Product(
+        id,
+        sku,
+        name,
+        description,
+        priceInCents,
+        currency,
+        status,
+        categoryId,
+        timestamp,
+        timestamp);
+  }
+
+  /**
+   * Returns a new Product instance with updated attributes while keeping categoryId unchanged.
    *
    * @param newSku the updated stock keeping unit
    * @param newName the updated product name
@@ -131,6 +170,39 @@ public record Product(
       String newCurrency,
       ProductStatus newStatus,
       Instant newUpdatedAt) {
+    return withUpdatedAttributes(
+        newSku,
+        newName,
+        newDescription,
+        newPriceInCents,
+        newCurrency,
+        newStatus,
+        this.categoryId,
+        newUpdatedAt);
+  }
+
+  /**
+   * Returns a new Product instance with updated attributes and category identifier.
+   *
+   * @param newSku the updated stock keeping unit
+   * @param newName the updated product name
+   * @param newDescription the updated description
+   * @param newPriceInCents the updated price in cents
+   * @param newCurrency the updated currency code
+   * @param newStatus the updated product status
+   * @param newCategoryId the updated optional category identifier
+   * @param newUpdatedAt the new update timestamp
+   * @return the updated Product instance
+   */
+  public Product withUpdatedAttributes(
+      String newSku,
+      String newName,
+      @Nullable String newDescription,
+      int newPriceInCents,
+      String newCurrency,
+      ProductStatus newStatus,
+      @Nullable UUID newCategoryId,
+      Instant newUpdatedAt) {
     return new Product(
         this.id,
         newSku,
@@ -139,6 +211,7 @@ public record Product(
         newPriceInCents,
         newCurrency,
         newStatus,
+        newCategoryId,
         this.createdAt,
         newUpdatedAt);
   }

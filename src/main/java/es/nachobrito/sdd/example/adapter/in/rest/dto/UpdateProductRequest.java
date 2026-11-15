@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
+import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -19,6 +20,7 @@ import org.jspecify.annotations.Nullable;
  * @param priceInCents the updated price in integer cents
  * @param currency the updated ISO-4217 three-letter currency code
  * @param status the updated product status
+ * @param categoryId the updated optional category identifier
  */
 @Serdeable
 @Introspected
@@ -30,4 +32,5 @@ public record UpdateProductRequest(
     @NotBlank
     @Pattern(regexp = "^[A-Z]{3}$", message = "Currency must be a valid 3-letter ISO-4217 code")
     String currency,
-    @NotNull ProductStatus status) {}
+    @NotNull ProductStatus status,
+    @Nullable UUID categoryId) {}

@@ -21,6 +21,7 @@ import org.jspecify.annotations.Nullable;
  * @param priceInCents the price in integer cents
  * @param currency the ISO-4217 three-letter currency code
  * @param status the product status
+ * @param categoryId the optional category identifier
  */
 @Serdeable
 @Introspected
@@ -33,4 +34,5 @@ public record CreateProductRequest(
     @NotBlank
     @Pattern(regexp = "^[A-Z]{3}$", message = "Currency must be a valid 3-letter ISO-4217 code")
     String currency,
-    @NotNull ProductStatus status) {}
+    @NotNull ProductStatus status,
+    @Nullable UUID categoryId) {}

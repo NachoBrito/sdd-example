@@ -1,6 +1,7 @@
 package es.nachobrito.sdd.example.domain.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -91,5 +92,25 @@ class ProductTest {
     Product updated = original.withUpdatedAttributes(
         "NEW-SKU", "New Name", "New Desc", 12_345, "EUR", ProductStatus.ACTIVE, later);
     assertEquals(NOW, updated.createdAt());
+    assertNull(updated.categoryId());
+  }
+
+  @Test
+  void createAndUpdateWithCategoryIdPreservesOrUpdatesCategory() {
+    UUID cat1 = UUID.fromString("aaaaaaaa-1111-1111-1111-111111111111");
+    UUID cat2 = UUID.fromString("bbbbbbbb-2222-2222-2222-222222222222");
+    Product created = Product.create(
+        VALID_ID, VALID_SKU, VALID_NAME, VALID_DESC,
+        VALID_PRICE, VALID_CURRENCY, VALID_STATUS, cat1, NOW);
+    assertEquals(cat1, created.categoryId());
+
+    Instant later = NOW.plusSeconds(60);
+    Product preserved = created.withUpdatedAttributes(
+        "SKU-2", "Name 2", VALID_DESC, VALID_PRICE, VALID_CURRENCY, VALID_STATUS, later);
+    assertEquals(cat1, preserved.categoryId());
+
+    Product changed = preserved.withUpdatedAttributes(
+        "SKU-3", "Name 3", null, VALID_PRICE, VALID_CURRENCY, ProductStatus.ACTIVE, cat2, later);
+    assertEquals(cat2, changed.categoryId());
   }
 }

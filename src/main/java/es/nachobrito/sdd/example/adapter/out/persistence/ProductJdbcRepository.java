@@ -33,6 +33,14 @@ public interface ProductJdbcRepository extends GenericRepository<ProductEntity, 
   boolean existsById(UUID id);
 
   /**
+   * Checks if any product references the given category identifier.
+   *
+   * @param categoryId the category identifier
+   * @return true if at least one entity references the category
+   */
+  boolean existsByCategoryId(UUID categoryId);
+
+  /**
    * Deletes an entity by its identifier.
    *
    * @param id the product identifier

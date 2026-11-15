@@ -29,6 +29,7 @@ public interface CreateProductUseCase {
    * @param priceInCents the product price in integer cents
    * @param currency the ISO-4217 currency code
    * @param status the product status
+   * @param categoryId the optional category identifier
    */
   record CreateProductCommand(
       UUID id,
@@ -37,6 +38,7 @@ public interface CreateProductUseCase {
       @Nullable String description,
       int priceInCents,
       String currency,
-      ProductStatus status) {}
+      ProductStatus status,
+      @Nullable UUID categoryId) {}
 }
 

@@ -61,6 +61,12 @@ public class ProductPersistenceAdapter implements ProductRepositoryPort {
   }
 
   @Override
+  public boolean existsByCategoryId(UUID categoryId) {
+    Objects.requireNonNull(categoryId, "Category id cannot be null");
+    return repository.existsByCategoryId(categoryId);
+  }
+
+  @Override
   public boolean existsBySku(String sku) {
     Objects.requireNonNull(sku, "Product sku cannot be null");
     return repository.existsBySku(sku);

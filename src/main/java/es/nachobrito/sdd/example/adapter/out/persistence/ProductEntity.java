@@ -20,6 +20,7 @@ import java.util.UUID;
  * @param priceInCents the price in cents
  * @param currency the ISO currency code
  * @param status the status string
+ * @param categoryId the optional category identifier
  * @param createdAt the creation timestamp
  * @param updatedAt the update timestamp
  */
@@ -32,6 +33,7 @@ public record ProductEntity(
     @MappedProperty("price_in_cents") int priceInCents,
     @NonNull String currency,
     @NonNull String status,
+    @Nullable @MappedProperty("category_id") UUID categoryId,
     @NonNull @MappedProperty("created_at") Instant createdAt,
     @NonNull @MappedProperty("updated_at") Instant updatedAt) {
 
@@ -49,6 +51,7 @@ public record ProductEntity(
         this.priceInCents,
         this.currency,
         ProductStatus.valueOf(this.status),
+        this.categoryId,
         this.createdAt,
         this.updatedAt);
   }
@@ -68,6 +71,7 @@ public record ProductEntity(
         domain.priceInCents(),
         domain.currency(),
         domain.status().name(),
+        domain.categoryId(),
         domain.createdAt(),
         domain.updatedAt());
   }

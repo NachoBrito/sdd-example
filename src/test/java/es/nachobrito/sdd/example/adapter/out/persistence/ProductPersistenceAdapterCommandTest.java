@@ -1,6 +1,9 @@
 package es.nachobrito.sdd.example.adapter.out.persistence;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -62,6 +65,17 @@ class ProductPersistenceAdapterCommandTest {
     adapter.deleteById(ID);
 
     verify(repository).deleteById(ID);
+  }
+
+  @Test
+  void existsByCategoryIdDelegatesAndRejectsNull() {
+    when(repository.existsByCategoryId(ID)).thenReturn(true);
+    assertTrue(adapter.existsByCategoryId(ID));
+
+    when(repository.existsByCategoryId(ID)).thenReturn(false);
+    assertFalse(adapter.existsByCategoryId(ID));
+
+    assertThrows(NullPointerException.class, () -> adapter.existsByCategoryId(null));
   }
 }
 

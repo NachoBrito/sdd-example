@@ -1,6 +1,7 @@
 package es.nachobrito.sdd.example.application.service;
 
 import es.nachobrito.sdd.example.application.port.in.ProductUseCase;
+import es.nachobrito.sdd.example.application.port.out.CategoryRepositoryPort;
 import es.nachobrito.sdd.example.application.port.out.ProductRepositoryPort;
 import es.nachobrito.sdd.example.application.security.AuthorizationPolicy;
 import es.nachobrito.sdd.example.application.security.AuthorizePolicy;
@@ -17,6 +18,7 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Application service implementing product use cases.
@@ -25,26 +27,35 @@ import java.util.regex.PatternSyntaxException;
 public class ProductService implements ProductUseCase {
 
   private final ProductRepositoryPort repository;
+  private final CategoryRepositoryPort categoryRepository;
   private final Clock clock;
 
   /**
    * Constructs the service with default system UTC clock.
    *
    * @param repository the product repository port
+   * @param categoryRepository the category repository port
    */
   @Inject
-  public ProductService(ProductRepositoryPort repository) {
-    this(repository, Clock.systemUTC());
+  public ProductService(
+      ProductRepositoryPort repository,
+      CategoryRepositoryPort categoryRepository) {
+    this(repository, categoryRepository, Clock.systemUTC());
   }
 
   /**
    * Constructs the service with a specific clock for testing.
    *
    * @param repository the product repository port
+   * @param categoryRepository the category repository port
    * @param clock the clock instance
    */
-  public ProductService(ProductRepositoryPort repository, Clock clock) {
+  public ProductService(
+      ProductRepositoryPort repository,
+      CategoryRepositoryPort categoryRepository,
+      Clock clock) {
     this.repository = repository;
+    this.categoryRepository = categoryRepository;
     this.clock = clock;
   }
 
@@ -57,6 +68,7 @@ public class ProductService implements ProductUseCase {
     if (repository.existsBySku(command.sku())) {
       throw new DuplicateSkuException(command.sku());
     }
+    validateCategory(command.categoryId());
 
     Product product = Product.create(
         command.id(),
@@ -66,6 +78,7 @@ public class ProductService implements ProductUseCase {
         command.priceInCents(),
         command.currency(),
         command.status(),
+        command.categoryId(),
         clock.instant());
 
     return repository.save(product);
@@ -87,6 +100,7 @@ public class ProductService implements ProductUseCase {
     if (repository.existsBySkuAndIdNot(command.sku(), command.id())) {
       throw new DuplicateSkuException(command.sku());
     }
+    validateCategory(command.categoryId());
 
     Product updated = existing.withUpdatedAttributes(
         command.sku(),
@@ -95,9 +109,16 @@ public class ProductService implements ProductUseCase {
         command.priceInCents(),
         command.currency(),
         command.status(),
+        command.categoryId(),
         clock.instant());
 
     return repository.save(updated);
+  }
+
+  private void validateCategory(@Nullable UUID categoryId) {
+    if (categoryId != null && !categoryRepository.existsById(categoryId)) {
+      throw new InvalidProductDataException("Category does not exist: " + categoryId);
+    }
   }
 
   @Override

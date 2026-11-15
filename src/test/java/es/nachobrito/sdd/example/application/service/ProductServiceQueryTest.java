@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 import es.nachobrito.sdd.example.application.port.in.ListProductsUseCase.ListProductsQuery;
+import es.nachobrito.sdd.example.application.port.out.CategoryRepositoryPort;
 import es.nachobrito.sdd.example.application.port.out.ProductRepositoryPort;
 import es.nachobrito.sdd.example.domain.model.InvalidProductDataException;
 import es.nachobrito.sdd.example.domain.model.Product;
@@ -28,6 +29,9 @@ class ProductServiceQueryTest {
   @Mock
   private ProductRepositoryPort repository;
 
+  @Mock
+  private CategoryRepositoryPort categoryRepository;
+
   private ProductService service;
   private Instant now;
 
@@ -43,7 +47,7 @@ class ProductServiceQueryTest {
   void setUp() {
     now = Instant.parse("2026-11-10T10:00:00Z");
     Clock fixedClock = Clock.fixed(now, ZoneOffset.UTC);
-    service = new ProductService(repository, fixedClock);
+    service = new ProductService(repository, categoryRepository, fixedClock);
   }
 
   @Test

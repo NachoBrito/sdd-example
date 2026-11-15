@@ -11,24 +11,28 @@ import org.junit.jupiter.api.Test;
 class ProductEntityTest {
 
   private static final UUID ID = UUID.fromString("55555555-5555-5555-5555-555555555555");
+  private static final UUID CATEGORY_ID =
+      UUID.fromString("66666666-6666-6666-6666-666666666666");
   private static final Instant NOW = Instant.parse("2026-11-10T12:00:00Z");
 
   @Test
   void fromDomainMapsAllFieldsCorrectly() {
     Product product = Product.create(
-        ID, "SKU-E", "Name E", "Desc E", 5_000, "USD", ProductStatus.ACTIVE, NOW);
+        ID, "SKU-E", "Name E", "Desc E", 5_000, "USD", ProductStatus.ACTIVE, CATEGORY_ID, NOW);
     ProductEntity entity = ProductEntity.fromDomain(product);
 
     assertEquals("SKU-E", entity.sku());
+    assertEquals(CATEGORY_ID, entity.categoryId());
   }
 
   @Test
   void toDomainMapsAllFieldsCorrectly() {
     ProductEntity entity = new ProductEntity(
-        ID, "SKU-E", "Name E", "Desc E", 5_000, "USD", "ACTIVE", NOW, NOW);
+        ID, "SKU-E", "Name E", "Desc E", 5_000, "USD", "ACTIVE", CATEGORY_ID, NOW, NOW);
     Product product = entity.toDomain();
 
     assertEquals(ProductStatus.ACTIVE, product.status());
+    assertEquals(CATEGORY_ID, product.categoryId());
   }
 }
 

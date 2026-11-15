@@ -1,0 +1,285 @@
+openapi: 3.0.3
+info:
+  title: Promotional Campaigns API
+  version: 1.0.0
+  description: Versioned REST endpoints for creating, updating, listing, and deleting discount campaigns. Restricted to ADMIN users.
+paths:
+  /v1/campaigns:
+    post:
+      summary: Create a campaign
+      description: Creates a new promotional campaign with a client-generated UUID. Restricted to ADMIN users.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCampaignRequest'
+      responses:
+        '201':
+          description: Campaign created
+          headers:
+            Location:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Authentication required
+        '403':
+          description: ADMIN role required
+        '409':
+          description: Campaign identifier already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      summary: List campaigns
+      description: Lists campaigns with optional filtering by name, description, status, and date overlap window. Restricted to ADMIN users.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: name
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: description
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/CampaignStatus'
+        - name: startDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Matching campaigns
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CampaignResponse'
+        '400':
+          description: Invalid filter parameters (for example, startDate after endDate)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Authentication required
+        '403':
+          description: ADMIN role required
+
+  /v1/campaigns/{id}:
+    put:
+      summary: Update a campaign
+      description: Replaces attributes and predicates of an existing campaign. Restricted to ADMIN users.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCampaignRequest'
+      responses:
+        '200':
+          description: Campaign updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Authentication required
+        '403':
+          description: ADMIN role required
+        '404':
+          description: Campaign not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Delete a campaign
+      description: Permanently deletes a campaign by identifier. Restricted to ADMIN users.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Campaign deleted
+        '401':
+          description: Authentication required
+        '403':
+          description: ADMIN role required
+        '404':
+          description: Campaign not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    CampaignStatus:
+      type: string
+      enum: [DRAFT, ACTIVE, INACTIVE]
+    PredicateType:
+      type: string
+      enum: [IN_CATEGORY, NOT_IN_CATEGORY, IS_CHEAPER_THAN, IS_MORE_EXPENSIVE_THAN]
+    CampaignPredicateDto:
+      type: object
+      required: [predicateType, value]
+      properties:
+        predicateType:
+          $ref: '#/components/schemas/PredicateType'
+        value:
+          type: string
+          minLength: 1
+          maxLength: 255
+    CreateCampaignRequest:
+      type: object
+      required: [id, name, status, startDate, endDate, discountPercent]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+          nullable: true
+          maxLength: 4000
+        status:
+          $ref: '#/components/schemas/CampaignStatus'
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+        discountPercent:
+          type: integer
+          minimum: 0
+          maximum: 100
+        predicates:
+          type: array
+          items:
+            $ref: '#/components/schemas/CampaignPredicateDto'
+    UpdateCampaignRequest:
+      type: object
+      required: [name, status, startDate, endDate, discountPercent]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+          nullable: true
+          maxLength: 4000
+        status:
+          $ref: '#/components/schemas/CampaignStatus'
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+        discountPercent:
+          type: integer
+          minimum: 0
+          maximum: 100
+        predicates:
+          type: array
+          items:
+            $ref: '#/components/schemas/CampaignPredicateDto'
+    CampaignResponse:
+      type: object
+      required: [id, name, status, startDate, endDate, discountPercent, predicates]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        status:
+          $ref: '#/components/schemas/CampaignStatus'
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+        discountPercent:
+          type: integer
+        predicates:
+          type: array
+          items:
+            $ref: '#/components/schemas/CampaignPredicateDto'
+    ErrorResponse:
+      type: object
+      required: [message, details]
+      properties:
+        message:
+          type: string
+        details:
+          type: array
+          items:
+            type: string
+

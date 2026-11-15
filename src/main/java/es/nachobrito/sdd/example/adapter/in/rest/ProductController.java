@@ -3,10 +3,8 @@ package es.nachobrito.sdd.example.adapter.in.rest;
 import es.nachobrito.sdd.example.adapter.in.rest.dto.CreateProductRequest;
 import es.nachobrito.sdd.example.adapter.in.rest.dto.ProductResponse;
 import es.nachobrito.sdd.example.adapter.in.rest.dto.UpdateProductRequest;
-import es.nachobrito.sdd.example.application.port.in.CreateProductUseCase.CreateProductCommand;
-import es.nachobrito.sdd.example.application.port.in.ListProductsUseCase.ListProductsQuery;
 import es.nachobrito.sdd.example.application.port.in.ProductUseCase;
-import es.nachobrito.sdd.example.application.port.in.UpdateProductUseCase.UpdateProductCommand;
+import es.nachobrito.sdd.example.application.port.in.ResolveProductDiscountsUseCase;
 import es.nachobrito.sdd.example.domain.model.Product;
 import es.nachobrito.sdd.example.domain.model.ProductStatus;
 import io.micronaut.http.HttpResponse;
@@ -38,14 +36,19 @@ import org.jspecify.annotations.Nullable;
 public class ProductController {
 
   private final ProductUseCase productUseCase;
+  private final ResolveProductDiscountsUseCase resolveProductDiscountsUseCase;
 
   /**
-   * Constructs the controller with the product use cases.
+   * Constructs the controller with product management and discount resolution use cases.
    *
    * @param productUseCase the combined product use case port
+   * @param resolveProductDiscountsUseCase the request-time discount resolution port
    */
-  public ProductController(ProductUseCase productUseCase) {
+  public ProductController(
+      ProductUseCase productUseCase,
+      ResolveProductDiscountsUseCase resolveProductDiscountsUseCase) {
     this.productUseCase = productUseCase;
+    this.resolveProductDiscountsUseCase = resolveProductDiscountsUseCase;
   }
 
   /**
@@ -63,14 +66,15 @@ public class ProductController {
   @ApiResponse(responseCode = "400", description = "Validation error")
   @ApiResponse(responseCode = "409", description = "Identifier or SKU already exists")
   public HttpResponse<ProductResponse> create(@Body @Valid CreateProductRequest request) {
-    CreateProductCommand command = new CreateProductCommand(
+    ProductUseCase.CreateProductCommand command = new ProductUseCase.CreateProductCommand(
         request.id(),
         request.sku(),
         request.name(),
         request.description(),
         request.priceInCents(),
         request.currency(),
-        request.status());
+        request.status(),
+        request.categoryId());
 
     Product created = productUseCase.createProduct(command);
     URI location = URI.create("/v1/products/" + created.id());
@@ -90,7 +94,8 @@ public class ProductController {
   @ApiResponse(responseCode = "404", description = "Product not found")
   public ProductResponse getById(@PathVariable UUID id) {
     Product product = productUseCase.getProduct(id);
-    return ProductResponse.fromDomain(product);
+    return ProductResponse.fromDomain(
+        product, resolveProductDiscountsUseCase.resolveActiveDiscounts(product));
   }
 
   /**
@@ -112,14 +117,15 @@ public class ProductController {
   public ProductResponse update(
       @PathVariable UUID id,
       @Body @Valid UpdateProductRequest request) {
-    UpdateProductCommand command = new UpdateProductCommand(
+    ProductUseCase.UpdateProductCommand command = new ProductUseCase.UpdateProductCommand(
         id,
         request.sku(),
         request.name(),
         request.description(),
         request.priceInCents(),
         request.currency(),
-        request.status());
+        request.status(),
+        request.categoryId());
 
     Product updated = productUseCase.updateProduct(command);
     return ProductResponse.fromDomain(updated);
@@ -166,9 +172,10 @@ public class ProductController {
       @QueryValue @Nullable ProductStatus status,
       @QueryValue(defaultValue = "name") String sort,
       @QueryValue(defaultValue = "asc") String direction) {
-    ListProductsQuery query = new ListProductsQuery(sku, nameRegex, status, sort, direction);
-    return productUseCase.listProducts(query).stream()
-        .map(ProductResponse::fromDomain)
-        .toList();
+    ProductUseCase.ListProductsQuery query =
+        new ProductUseCase.ListProductsQuery(sku, nameRegex, status, sort, direction);
+    List<Product> products = productUseCase.listProducts(query);
+    return ProductResponse.fromDomainList(
+        products, resolveProductDiscountsUseCase.resolveActiveDiscounts(products));
   }
 }

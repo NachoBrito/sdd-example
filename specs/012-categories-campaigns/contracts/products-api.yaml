@@ -1,0 +1,360 @@
+openapi: 3.0.3
+info:
+  title: Product Catalog API (v1 Backward-Compatible and v2 Category-Required)
+  version: 2.0.0
+  description: Updated v1 product endpoints (optional categoryId, request-time active discounts on reads) and v2 product endpoints (required categoryId).
+paths:
+  /v1/products:
+    post:
+      summary: Create product (v1)
+      description: Creates a product with optional categoryId. Restricted to CATALOG users.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProductV1Request'
+      responses:
+        '201':
+          description: Product created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+        '400':
+          description: Validation error (including nonexistent categoryId)
+    get:
+      summary: List products (v1)
+      description: Lists products with request-time active discounts resolved per product.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: sku
+          in: query
+          schema:
+            type: string
+        - name: nameRegex
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/ProductStatus'
+        - name: sort
+          in: query
+          schema:
+            type: string
+            default: name
+        - name: direction
+          in: query
+          schema:
+            type: string
+            default: asc
+      responses:
+        '200':
+          description: Matching products with active discounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductResponse'
+
+  /v1/products/{id}:
+    get:
+      summary: Get product (v1)
+      description: Retrieves a product by identifier with request-time active discounts resolved.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Product found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+        '404':
+          description: Product not found
+    put:
+      summary: Update product (v1)
+      description: Updates a product with optional categoryId. Restricted to CATALOG users.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProductV1Request'
+      responses:
+        '200':
+          description: Product updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+        '400':
+          description: Validation error (including nonexistent categoryId)
+
+  /v2/products:
+    post:
+      summary: Create product (v2)
+      description: Creates a product with required categoryId validated against existing categories. Restricted to CATALOG users.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProductV2Request'
+      responses:
+        '201':
+          description: Product created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+        '400':
+          description: Validation error (missing or nonexistent categoryId)
+        '409':
+          description: Identifier or SKU already exists
+    get:
+      summary: List products (v2)
+      description: Lists products with request-time active discounts resolved per product.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: sku
+          in: query
+          schema:
+            type: string
+        - name: nameRegex
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/ProductStatus'
+        - name: sort
+          in: query
+          schema:
+            type: string
+            default: name
+        - name: direction
+          in: query
+          schema:
+            type: string
+            default: asc
+      responses:
+        '200':
+          description: Matching products with active discounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductResponse'
+
+  /v2/products/{id}:
+    get:
+      summary: Get product (v2)
+      description: Retrieves a product by identifier with request-time active discounts resolved.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Product found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+        '404':
+          description: Product not found
+    put:
+      summary: Update product (v2)
+      description: Updates a product with required categoryId validated against existing categories. Restricted to CATALOG users.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProductV2Request'
+      responses:
+        '200':
+          description: Product updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+        '400':
+          description: Validation error (missing or nonexistent categoryId)
+        '404':
+          description: Product not found
+    delete:
+      summary: Delete product (v2)
+      description: Permanently deletes a product by identifier. Restricted to CATALOG users.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Product deleted
+        '404':
+          description: Product not found
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ProductStatus:
+      type: string
+      enum: [DRAFT, ACTIVE, ARCHIVED]
+    ProductDiscountResponse:
+      type: object
+      required: [campaignId, campaignName, discountPercent]
+      properties:
+        campaignId:
+          type: string
+          format: uuid
+        campaignName:
+          type: string
+        discountPercent:
+          type: integer
+          minimum: 0
+          maximum: 100
+    CreateProductV1Request:
+      type: object
+      required: [id, sku, name, priceInCents, currency, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        sku:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        priceInCents:
+          type: integer
+          minimum: 0
+        currency:
+          type: string
+        status:
+          $ref: '#/components/schemas/ProductStatus'
+        categoryId:
+          type: string
+          format: uuid
+          nullable: true
+    UpdateProductV1Request:
+      type: object
+      required: [sku, name, priceInCents, currency, status]
+      properties:
+        sku:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        priceInCents:
+          type: integer
+          minimum: 0
+        currency:
+          type: string
+        status:
+          $ref: '#/components/schemas/ProductStatus'
+        categoryId:
+          type: string
+          format: uuid
+          nullable: true
+    CreateProductV2Request:
+      allOf:
+        - $ref: '#/components/schemas/CreateProductV1Request'
+        - type: object
+          required: [categoryId]
+    UpdateProductV2Request:
+      allOf:
+        - $ref: '#/components/schemas/UpdateProductV1Request'
+        - type: object
+          required: [categoryId]
+    ProductResponse:
+      type: object
+      required: [id, sku, name, priceInCents, currency, status, createdAt, updatedAt, discounts]
+      properties:
+        id:
+          type: string
+          format: uuid
+        sku:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        priceInCents:
+          type: integer
+        currency:
+          type: string
+        status:
+          $ref: '#/components/schemas/ProductStatus'
+        categoryId:
+          type: string
+          format: uuid
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        discounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductDiscountResponse'
+

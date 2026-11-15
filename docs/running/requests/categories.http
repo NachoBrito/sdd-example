@@ -1,0 +1,81 @@
+### Category Catalog API Requests
+# Use this file to test the category endpoints in IntelliJ IDEA or VS Code REST Client.
+
+@host = http://localhost:8080
+@categoryId = 44444444-4444-4444-4444-444444444444
+
+### 0. Login as Seeded Admin User (200 OK)
+POST {{host}}/v1/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin1234"
+}
+
+> {%
+  client.global.set("adminAccessToken", response.body.accessToken);
+%}
+
+### 1. Login as Seeded Catalog User (200 OK)
+POST {{host}}/v1/auth/login
+Content-Type: application/json
+
+{
+  "username": "catalog",
+  "password": "catalog1234"
+}
+
+> {%
+  client.global.set("catalogAccessToken", response.body.accessToken);
+%}
+
+### 2. Create Category (201 Created)
+# Only ADMIN users can create categories.
+POST {{host}}/v1/categories
+Authorization: Bearer {{adminAccessToken}}
+Content-Type: application/json
+
+{
+  "id": "{{categoryId}}",
+  "name": "Keyboards",
+  "description": "Mechanical and ergonomic keyboards"
+}
+
+### 3. List Categories with Optional Filters (200 OK)
+# CUSTOMER and CATALOG users can list categories.
+GET {{host}}/v1/categories?name=key&description=mechanical
+Authorization: Bearer {{catalogAccessToken}}
+Accept: application/json
+
+### 4. Create Category - Forbidden for Non-Admin User (403 Forbidden)
+POST {{host}}/v1/categories
+Authorization: Bearer {{catalogAccessToken}}
+Content-Type: application/json
+
+{
+  "id": "44444444-4444-4444-4444-444444444445",
+  "name": "Accessories",
+  "description": "Desktop accessories"
+}
+
+### 5. Create Category - Conflict Error (409 Conflict)
+POST {{host}}/v1/categories
+Authorization: Bearer {{adminAccessToken}}
+Content-Type: application/json
+
+{
+  "id": "{{categoryId}}",
+  "name": "Duplicate Category",
+  "description": "Attempt to create a category with an existing identifier"
+}
+
+### 6. Delete Category (204 No Content)
+# Delete returns 409 Conflict if any product references the category.
+DELETE {{host}}/v1/categories/{{categoryId}}
+Authorization: Bearer {{adminAccessToken}}
+
+### 7. Delete Non-Existent Category (404 Not Found)
+DELETE {{host}}/v1/categories/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{adminAccessToken}}
+
